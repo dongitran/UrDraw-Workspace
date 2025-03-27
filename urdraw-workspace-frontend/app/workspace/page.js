@@ -1,0 +1,217 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchUserCollections,
+  createCollection,
+  deleteCollection,
+  getSharedCollections,
+} from "@/lib/api";
+import CollectionCard from "@/components/CollectionCard";
+import CreateCollectionModal from "@/components/CreateCollectionModal";
+import ShareCollectionModal from "@/components/ShareCollectionModal";
+import JoinCollectionModal from "@/components/JoinCollectionModal";
+import Notification from "@/components/Notification";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
+export default function WorkspacePage() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [collections, setCollections] = useState([]);
+  const [sharedCollections, setSharedCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [selectedCollection, setSelectedCollection] = useState(null);
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated()) {
+      router.push("/");
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      loadCollections();
+    }
+  }, [isAuthenticated]);
+
+  const loadCollections = async () => {
+    try {
+      setLoading(true);
+      const [ownedCollections, shared] = await Promise.all([
+        fetchUserCollections(),
+        getSharedCollections(),
+      ]);
+      setCollections(ownedCollections);
+      setSharedCollections(shared);
+    } catch (error) {
+      console.error("Error loading collections:", error);
+      showNotification("Error loading collections", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenCollection = (collectionId) => {
+    router.push(`/workspace/collection/${collectionId}`);
+  };
+
+  const handleCreateCollection = async (name) => {
+    try {
+      const newCollection = await createCollection({ name });
+      setCollections([newCollection, ...collections]);
+      setIsCreateModalOpen(false);
+      showNotification("Collection created successfully", "success");
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      showNotification("Error creating collection", "error");
+    }
+  };
+
+  const handleDeleteCollection = async (collectionId) => {
+    try {
+      await deleteCollection(collectionId);
+      setCollections(collections.filter((c) => c.id !== collectionId));
+      showNotification("Collection deleted successfully", "success");
+    } catch (error) {
+      console.error("Error deleting collection:", error);
+      showNotification("Error deleting collection", "error");
+    }
+  };
+
+  const handleShareCollection = (collection) => {
+    setSelectedCollection(collection);
+    setIsShareModalOpen(true);
+  };
+
+  const handleJoinSuccess = () => {
+    loadCollections();
+    showNotification("Successfully joined collection", "success");
+  };
+
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type });
+  };
+
+  if (
+    authLoading ||
+    (loading && !collections.length && !sharedCollections.length)
+  ) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="large" message="Loading workspace..." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold mb-4">My Collections</h2>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setIsJoinModalOpen(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Join Collection
+            </button>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="btn-primary"
+            >
+              Create Collection
+            </button>
+          </div>
+        </div>
+
+        {collections.length === 0 ? (
+          <p className="text-gray-500">
+            No collections yet. Create your first collection!
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {collections.map((collection) => (
+              <div key={collection.id} className="relative">
+                <CollectionCard
+                  collection={collection}
+                  onClick={() => handleOpenCollection(collection.id)}
+                  onDelete={handleDeleteCollection}
+                />
+                <button
+                  onClick={() => handleShareCollection(collection)}
+                  className="absolute top-2 left-2 p-1 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 text-blue-600"
+                  title="Share Collection"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {sharedCollections.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Shared With Me</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {sharedCollections.map((collection) => (
+              <div key={collection.id} className="relative">
+                <CollectionCard
+                  collection={{
+                    ...collection,
+                    name: `${collection.name} (${
+                      collection.permission === "view" ? "View" : "Edit"
+                    })`,
+                  }}
+                  onClick={() => handleOpenCollection(collection.id)}
+                />
+                <div className="absolute top-2 left-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                  Shared
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <CreateCollectionModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateCollection}
+      />
+
+      <ShareCollectionModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        collection={selectedCollection}
+      />
+
+      <JoinCollectionModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onSuccess={handleJoinSuccess}
+      />
+    </div>
+  );
+}
