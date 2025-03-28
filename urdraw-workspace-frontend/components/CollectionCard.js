@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function CollectionCard({ collection, onClick, onDelete }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
 
   const handleCardClick = (e) => {
     if (
@@ -31,6 +33,26 @@ export default function CollectionCard({ collection, onClick, onDelete }) {
       onDelete(collection.id);
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isMenuOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   return (
     <div
@@ -60,6 +82,7 @@ export default function CollectionCard({ collection, onClick, onDelete }) {
       </div>
 
       <button
+        ref={buttonRef}
         className="menu-button absolute top-2 right-2 p-1 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700"
         onClick={toggleMenu}
       >
@@ -74,7 +97,10 @@ export default function CollectionCard({ collection, onClick, onDelete }) {
       </button>
 
       {isMenuOpen && (
-        <div className="menu-dropdown absolute top-10 right-2 bg-white shadow-lg rounded-md py-1 z-10">
+        <div
+          ref={menuRef}
+          className="menu-dropdown absolute top-10 right-2 bg-white shadow-lg rounded-md py-1 z-10"
+        >
           <button
             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
             onClick={handleDelete}
