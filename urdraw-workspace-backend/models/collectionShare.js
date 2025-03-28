@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const CollectionShare = sequelize.define(
-    "CollectionShare",
+    "collection_share",
     {
       id: {
         type: DataTypes.UUID,
