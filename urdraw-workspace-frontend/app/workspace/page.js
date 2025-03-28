@@ -8,9 +8,11 @@ import {
   createCollection,
   deleteCollection,
   getSharedCollections,
+  updateCollection,
 } from "@/lib/api";
 import CollectionCard from "@/components/CollectionCard";
 import CreateCollectionModal from "@/components/CreateCollectionModal";
+import EditCollectionModal from "@/components/EditCollectionModal";
 import ShareCollectionModal from "@/components/ShareCollectionModal";
 import JoinCollectionModal from "@/components/JoinCollectionModal";
 import Notification from "@/components/Notification";
@@ -23,6 +25,7 @@ export default function WorkspacePage() {
   const [sharedCollections, setSharedCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
@@ -70,6 +73,31 @@ export default function WorkspacePage() {
     } catch (error) {
       console.error("Error creating collection:", error);
       showNotification("Error creating collection", "error");
+    }
+  };
+
+  const handleEditCollection = (collection) => {
+    setSelectedCollection(collection);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateCollectionName = async (name) => {
+    try {
+      const updatedCollection = await updateCollection(selectedCollection.id, {
+        name,
+      });
+      setCollections(
+        collections.map((c) =>
+          c.id === updatedCollection.id
+            ? { ...c, name: updatedCollection.name }
+            : c
+        )
+      );
+      setIsEditModalOpen(false);
+      showNotification("Collection name updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating collection name:", error);
+      showNotification("Error updating collection name", "error");
     }
   };
 
@@ -150,6 +178,7 @@ export default function WorkspacePage() {
                   collection={collection}
                   onClick={() => handleOpenCollection(collection.id)}
                   onDelete={handleDeleteCollection}
+                  onEdit={handleEditCollection}
                 />
                 <button
                   onClick={() => handleShareCollection(collection)}
@@ -199,6 +228,13 @@ export default function WorkspacePage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateCollection}
+      />
+
+      <EditCollectionModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onEdit={handleUpdateCollectionName}
+        initialName={selectedCollection?.name}
       />
 
       <ShareCollectionModal
