@@ -253,4 +253,14 @@ export const removeCollectionShare = async (shareId) => {
   }
 };
 
+export const getAllCollectionsAndDrawings = async () => {
+  try {
+    const response = await apiClient.get("/collections/all/data");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all collections and drawings:", error);
+    throw error;
+  }
+};
+
 export default apiClient;
