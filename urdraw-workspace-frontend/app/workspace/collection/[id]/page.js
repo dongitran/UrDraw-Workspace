@@ -8,14 +8,16 @@ import {
   fetchCollectionDrawings,
   createDrawing,
   deleteDrawing,
-  buildUrDrawUrl,
+  updateDrawing,
   initializeDrawingContent,
 } from "@/lib/api";
 import { generateRandomThumbnail } from "@/lib/thumbnailGenerator";
 import DrawingCard from "@/components/DrawingCard";
 import CreateDrawingModal from "@/components/CreateDrawingModal";
+import EditDrawingModal from "@/components/EditDrawingModal";
 import Notification from "@/components/Notification";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { buildUrDrawUrl } from "@/lib/config";
 
 export default function CollectionPage() {
   const { id: collectionId } = useParams();
@@ -28,6 +30,8 @@ export default function CollectionPage() {
   const [isShared, setIsShared] = useState(false);
   const [permission, setPermission] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedDrawing, setSelectedDrawing] = useState(null);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
@@ -119,6 +123,37 @@ export default function CollectionPage() {
     }
   };
 
+  const handleEditDrawing = (drawing) => {
+    if (isShared && permission !== "edit") {
+      showNotification(
+        "You don't have permission to edit drawings in this collection",
+        "error"
+      );
+      return;
+    }
+
+    setSelectedDrawing(drawing);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateDrawingName = async (name) => {
+    try {
+      const updatedDrawing = await updateDrawing(selectedDrawing.id, { name });
+
+      setDrawings(
+        drawings.map((d) =>
+          d.id === updatedDrawing.id ? { ...d, name: updatedDrawing.name } : d
+        )
+      );
+
+      setIsEditModalOpen(false);
+      showNotification("Drawing name updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating drawing name:", error);
+      showNotification("Error updating drawing name", "error");
+    }
+  };
+
   const handleDeleteDrawing = async (drawingId) => {
     if (isShared && permission !== "edit") {
       showNotification(
@@ -184,24 +219,6 @@ export default function CollectionPage() {
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <button
-            onClick={() => router.push("/workspace")}
-            className="text-blue-600 hover:text-blue-800 mb-2 flex items-center"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-1"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Back to collections
-          </button>
           <h1 className="text-2xl font-bold">{collection.name}</h1>
 
           {isShared && (
@@ -248,6 +265,9 @@ export default function CollectionPage() {
               onDelete={
                 !isShared || permission === "edit" ? handleDeleteDrawing : null
               }
+              onEdit={
+                !isShared || permission === "edit" ? handleEditDrawing : null
+              }
             />
           ))}
         </div>
@@ -257,6 +277,13 @@ export default function CollectionPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateDrawing}
+      />
+
+      <EditDrawingModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onEdit={handleUpdateDrawingName}
+        initialName={selectedDrawing?.name}
       />
     </div>
   );

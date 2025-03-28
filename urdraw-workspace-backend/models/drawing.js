@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Drawing = sequelize.define(
-    "Drawing",
+    "drawing",
     {
       id: {
         type: DataTypes.UUID,
