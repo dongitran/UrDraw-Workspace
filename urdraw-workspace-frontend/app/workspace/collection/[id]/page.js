@@ -8,14 +8,16 @@ import {
   fetchCollectionDrawings,
   createDrawing,
   deleteDrawing,
-  buildUrDrawUrl,
+  updateDrawing,
   initializeDrawingContent,
 } from "@/lib/api";
 import { generateRandomThumbnail } from "@/lib/thumbnailGenerator";
 import DrawingCard from "@/components/DrawingCard";
 import CreateDrawingModal from "@/components/CreateDrawingModal";
+import EditDrawingModal from "@/components/EditDrawingModal";
 import Notification from "@/components/Notification";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { buildUrDrawUrl } from "@/lib/config";
 
 export default function CollectionPage() {
   const { id: collectionId } = useParams();
@@ -28,6 +30,8 @@ export default function CollectionPage() {
   const [isShared, setIsShared] = useState(false);
   const [permission, setPermission] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedDrawing, setSelectedDrawing] = useState(null);
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
@@ -116,6 +120,37 @@ export default function CollectionPage() {
     } catch (error) {
       console.error("Error creating drawing:", error);
       showNotification("Error creating drawing", "error");
+    }
+  };
+
+  const handleEditDrawing = (drawing) => {
+    if (isShared && permission !== "edit") {
+      showNotification(
+        "You don't have permission to edit drawings in this collection",
+        "error"
+      );
+      return;
+    }
+
+    setSelectedDrawing(drawing);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateDrawingName = async (name) => {
+    try {
+      const updatedDrawing = await updateDrawing(selectedDrawing.id, { name });
+
+      setDrawings(
+        drawings.map((d) =>
+          d.id === updatedDrawing.id ? { ...d, name: updatedDrawing.name } : d
+        )
+      );
+
+      setIsEditModalOpen(false);
+      showNotification("Drawing name updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating drawing name:", error);
+      showNotification("Error updating drawing name", "error");
     }
   };
 
@@ -248,6 +283,9 @@ export default function CollectionPage() {
               onDelete={
                 !isShared || permission === "edit" ? handleDeleteDrawing : null
               }
+              onEdit={
+                !isShared || permission === "edit" ? handleEditDrawing : null
+              }
             />
           ))}
         </div>
@@ -257,6 +295,13 @@ export default function CollectionPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateDrawing}
+      />
+
+      <EditDrawingModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onEdit={handleUpdateDrawingName}
+        initialName={selectedDrawing?.name}
       />
     </div>
   );

@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 
-export default function CollectionCard({ collection, onClick, onDelete }) {
+export default function CollectionCard({
+  collection,
+  onClick,
+  onDelete,
+  onEdit,
+}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
@@ -54,6 +59,12 @@ export default function CollectionCard({ collection, onClick, onDelete }) {
     };
   }, [isMenuOpen]);
 
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    onEdit(collection);
+  };
+
   return (
     <div
       className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200 relative"
@@ -101,6 +112,12 @@ export default function CollectionCard({ collection, onClick, onDelete }) {
           ref={menuRef}
           className="menu-dropdown absolute top-10 right-2 bg-white shadow-lg rounded-md py-1 z-10"
         >
+          <button
+            className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+            onClick={handleEdit}
+          >
+            Edit Name
+          </button>
           <button
             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
             onClick={handleDelete}

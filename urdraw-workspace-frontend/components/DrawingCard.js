@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { buildUrDrawUrl } from "@/lib/config";
 import { getToken } from "@/lib/keycloak";
 
-export default function DrawingCard({ drawing, onClick, onDelete }) {
+export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
@@ -65,6 +65,12 @@ export default function DrawingCard({ drawing, onClick, onDelete }) {
     }
   };
 
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    onEdit(drawing);
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -113,12 +119,22 @@ export default function DrawingCard({ drawing, onClick, onDelete }) {
           ref={menuRef}
           className="menu-dropdown absolute top-10 right-2 bg-white shadow-lg rounded-md py-1 z-10"
         >
-          <button
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-            onClick={handleDelete}
-          >
-            Delete drawing
-          </button>
+          {onEdit && (
+            <button
+              className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+              onClick={handleEdit}
+            >
+              Edit Name
+            </button>
+          )}
+          {onDelete && (
+            <button
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+              onClick={handleDelete}
+            >
+              Delete Drawing
+            </button>
+          )}
         </div>
       )}
 
