@@ -182,3 +182,63 @@ exports.deleteCollection = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getAllCollectionsAndDrawings = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const collections = await Collection.findAll({
+      where: { userId },
+      attributes: ["id", "name", "createdAt", "updatedAt"],
+      order: [["createdAt", "DESC"]],
+    });
+
+    const sharedCollections = await CollectionShare.findAll({
+      where: { sharedWithId: userId, status: "accepted" },
+      include: [
+        {
+          model: Collection,
+          as: "collection",
+          attributes: ["id", "name", "createdAt", "updatedAt"],
+        },
+      ],
+    });
+
+    const drawings = await Drawing.findAll({
+      where: { userId },
+      attributes: [
+        "id",
+        "name",
+        "thumbnailUrl",
+        "collectionId",
+        "lastModified",
+      ],
+      order: [["lastModified", "DESC"]],
+    });
+
+    const formattedSharedCollections = sharedCollections.map((share) => {
+      const collection = share.collection.get({ plain: true });
+      return {
+        ...collection,
+        isShared: true,
+        permission: share.permission,
+      };
+    });
+
+    const allCollections = [
+      ...collections.map((collection) => ({
+        ...collection.get({ plain: true }),
+        isShared: false,
+      })),
+      ...formattedSharedCollections,
+    ];
+
+    return res.status(200).json({
+      collections: allCollections,
+      drawings: drawings,
+    });
+  } catch (error) {
+    console.error("Error fetching all collections and drawings:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

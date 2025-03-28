@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import SearchBar from "./SearchBar";
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -37,6 +38,10 @@ export default function Header() {
       <div className="flex items-center">
         <div className="text-blue-600 font-bold text-xl mr-2">UrDraw</div>
         <div className="text-gray-600 text-sm hidden md:block">Workspace</div>
+      </div>
+
+      <div className="flex-1 mx-4 hidden md:block">
+        <SearchBar />
       </div>
 
       <div className="relative">
@@ -83,6 +88,28 @@ export default function Header() {
             </button>
           </div>
         )}
+      </div>
+
+      <div className="md:hidden ml-2">
+        <button
+          className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+          onClick={() => {
+            alert("Mobile search coming soon!");
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
       </div>
     </header>
   );
