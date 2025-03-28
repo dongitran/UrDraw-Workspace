@@ -20,7 +20,7 @@ jobs:
             *🚀 UrDraw - Content Backend * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
-            *📝 Commit message:* ${{ github.event.commits[0].message }}
+            *📝 Commit message:* ${{ github.event.head_commit.message }}
             *📦 Repository:* ${{ github.repository }}
             *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
 
@@ -85,7 +85,7 @@ jobs:
             *❌ UrDraw - Content Backend * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
-            *📝 Commit message:* ${{ github.event.commits[0].message }}
+            *📝 Commit message:* ${{ github.event.head_commit.message }}
             *📦 Repository:* ${{ github.repository }}
             *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
 
@@ -108,7 +108,7 @@ jobs:
             *🎉 UrDraw - Content Backend * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
-            *📝 Commit message:* ${{ github.event.commits[0].message }}
+            *📝 Commit message:* ${{ github.event.head_commit.message }}
             *📦 Repository:* ${{ github.repository }}
             *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
 
@@ -131,7 +131,7 @@ jobs:
             *❌ UrDraw - Content Backend * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
-            *📝 Commit message:* ${{ github.event.commits[0].message }}
+            *📝 Commit message:* ${{ github.event.head_commit.message }}
             *📦 Repository:* ${{ github.repository }}
             *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
 

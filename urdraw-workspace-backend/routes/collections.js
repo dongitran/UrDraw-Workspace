@@ -18,4 +18,6 @@ router.put("/:id", collectionController.updateCollection);
 
 router.delete("/:id", collectionController.deleteCollection);
 
+router.get("/all/data", collectionController.getAllCollectionsAndDrawings);
+
 module.exports = router;

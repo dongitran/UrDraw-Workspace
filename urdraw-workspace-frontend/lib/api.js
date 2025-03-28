@@ -118,6 +118,16 @@ export const getDrawingDetails = async (drawingId) => {
   }
 };
 
+export const updateDrawing = async (drawingId, updateData) => {
+  try {
+    const response = await apiClient.put(`/drawings/${drawingId}`, updateData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating drawing:", error);
+    throw error;
+  }
+};
+
 export const fetchUserCollections = async () => {
   try {
     const response = await apiClient.get("/collections");
@@ -239,6 +249,16 @@ export const removeCollectionShare = async (shareId) => {
     return response.data;
   } catch (error) {
     console.error("Error removing collection share:", error);
+    throw error;
+  }
+};
+
+export const getAllCollectionsAndDrawings = async () => {
+  try {
+    const response = await apiClient.get("/collections/all/data");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all collections and drawings:", error);
     throw error;
   }
 };
