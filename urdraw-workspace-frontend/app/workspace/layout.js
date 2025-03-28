@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Header from "@/components/Header";
+import Breadcrumb from "@/components/Breadcrumb";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function WorkspaceLayout({ children }) {
@@ -27,6 +28,7 @@ export default function WorkspaceLayout({ children }) {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
+      <Breadcrumb />
       <main className="flex-1 p-4">{children}</main>
     </div>
   );
