@@ -1,6 +1,10 @@
 import db from "db/db";
 import { Hono } from "hono";
 import VerifyToken from "middlewares/VerifyToken";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
+import { CollectionTable } from "db/schema";
+import dayjs from "dayjs";
 
 const CollectionRoute = new Hono();
 CollectionRoute.use(VerifyToken());
@@ -12,6 +16,7 @@ CollectionRoute.get("/", async (ctx) => {
     with: {
       drawings: true,
     },
+    orderBy: (clm, { desc }) => desc(clm.createdAt),
   });
   return ctx.json(
     collections.map((item: Record<string, any>) => {
@@ -129,4 +134,30 @@ CollectionRoute.get("/", async (ctx) => {
     };
     return ctx.json(response);
   });
+
+CollectionRoute.post(
+  "/",
+  zValidator(
+    "json",
+    z.object({
+      name: z.string().min(3, "Ít nhất phải 3 ký tự"),
+    })
+  ),
+  async (ctx) => {
+    const user = ctx.get("user");
+    const { name } = ctx.req.valid("json");
+    const collections = await db
+      .insert(CollectionTable)
+      .values({
+        userId: user.id,
+        name,
+        id: Bun.randomUUIDv7(),
+        createdAt: dayjs().toISOString(),
+        updatedAt: dayjs().toISOString(),
+      })
+      .returning()
+      .then((res) => res[0]);
+    return ctx.json(collections);
+  }
+);
 export default CollectionRoute;
