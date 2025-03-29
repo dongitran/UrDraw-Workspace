@@ -186,4 +186,16 @@ CollectionRoute.put(
     return ctx.json(newCollection);
   }
 );
+CollectionRoute.delete("/:id", async (ctx) => {
+  const id = ctx.req.param("id");
+  const user = ctx.get("user");
+  const collection = await db.query.CollectionTable.findFirst({
+    where: (clm, { eq, and }) => and(eq(clm.id, id), eq(clm.userId, user.id)),
+  });
+  if (!collection) return ctx.json({ message: "Collection not found" }, 404);
+
+  await db.delete(CollectionTable).where(eq(CollectionTable.id, collection.id));
+
+  return ctx.json({ message: "Collection deleted successfully" });
+});
 export default CollectionRoute;
