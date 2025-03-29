@@ -123,7 +123,7 @@ exports.createDrawing = async (req, res) => {
   try {
     const { name, thumbnailUrl, collectionId } = req.body;
     const userId = req.user.id;
-
+    //! Không cần thiết phải mặc định như này
     await collectionController.ensureDefaultCollection(userId);
 
     let targetCollectionId = collectionId;
@@ -189,9 +189,7 @@ exports.updateDrawing = async (req, res) => {
       });
 
       if (!share) {
-        return res
-          .status(403)
-          .json({ message: "You don't have permission to edit this drawing" });
+        return res.status(403).json({ message: "You don't have permission to edit this drawing" });
       }
     }
 
