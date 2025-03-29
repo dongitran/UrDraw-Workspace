@@ -1,14 +1,19 @@
 const crypto = require("crypto");
 const { models } = require("../models");
 const { Collection, Drawing, CollectionShare } = models;
+const ShareLogs = require("../models/logs/shareLogs");
 
 const generateInviteCode = () => {
   return crypto.randomBytes(6).toString("hex");
 };
 
 exports.createInviteCode = async (req, res) => {
+  let status = 201;
+  let collectionId = null;
+  let inviteCode = null;
   try {
-    const { collectionId, permission, expiresInDays } = req.body;
+    collectionId = req.body.collectionId;
+    const { permission, expiresInDays } = req.body;
     const userId = req.user.id;
 
     const collection = await Collection.findOne({
@@ -16,10 +21,11 @@ exports.createInviteCode = async (req, res) => {
     });
 
     if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
+      status = 404;
+      return res.status(status).json({ message: "Collection not found" });
     }
 
-    const inviteCode = generateInviteCode();
+    inviteCode = generateInviteCode();
 
     let expiresAt = null;
     if (expiresInDays) {
@@ -36,20 +42,43 @@ exports.createInviteCode = async (req, res) => {
       expiresAt,
     });
 
-    return res.status(201).json({
+    return res.status(status).json({
       inviteCode: share.inviteCode,
       permission: share.permission,
       expiresAt: share.expiresAt,
     });
   } catch (error) {
     console.error("Error creating invite code:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await ShareLogs.create({
+        action: "CREATE_INVITE",
+        userId: req.user.id,
+        collectionId,
+        inviteCode,
+        status,
+        message: status === 201 ? "Success" : "Failed",
+        error: status !== 201 ? { message: "Failed" } : null,
+        metadata: {
+          permission: req.body.permission || "view",
+          expiresInDays: req.body.expiresInDays,
+        },
+      });
+    } catch (logError) {
+      console.error("Error logging share action:", logError);
+    }
   }
 };
 
 exports.joinCollection = async (req, res) => {
+  let status = 200;
+  let collectionId = null;
+  let inviteCode = null;
+  let shareId = null;
   try {
-    const { inviteCode } = req.body;
+    inviteCode = req.body.inviteCode;
     const userId = req.user.id;
 
     const share = await CollectionShare.findOne({
@@ -63,22 +92,29 @@ exports.joinCollection = async (req, res) => {
     });
 
     if (!share) {
-      return res.status(404).json({ message: "Invalid invite code" });
+      status = 404;
+      return res.status(status).json({ message: "Invalid invite code" });
     }
 
+    shareId = share.id;
+    collectionId = share.collectionId;
+
     if (share.expiresAt && new Date(share.expiresAt) < new Date()) {
-      return res.status(400).json({ message: "Invite code has expired" });
+      status = 400;
+      return res.status(status).json({ message: "Invite code has expired" });
     }
 
     if (share.ownerId === userId) {
+      status = 400;
       return res
-        .status(400)
+        .status(status)
         .json({ message: "You cannot join your own collection" });
     }
 
     if (share.sharedWithId === userId && share.status === "accepted") {
+      status = 400;
       return res
-        .status(400)
+        .status(status)
         .json({ message: "You already have access to this collection" });
     }
 
@@ -86,17 +122,34 @@ exports.joinCollection = async (req, res) => {
     share.status = "accepted";
     await share.save();
 
-    return res.status(200).json({
+    return res.status(status).json({
       message: "Successfully joined collection",
       collection: share.collection,
     });
   } catch (error) {
     console.error("Error joining collection:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await ShareLogs.create({
+        action: "JOIN",
+        userId: req.user.id,
+        collectionId,
+        shareId,
+        inviteCode,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+      });
+    } catch (logError) {
+      console.error("Error logging share action:", logError);
+    }
   }
 };
 
 exports.getSharedCollections = async (req, res) => {
+  let status = 200;
   try {
     const userId = req.user.id;
 
@@ -127,16 +180,33 @@ exports.getSharedCollections = async (req, res) => {
       return collection;
     });
 
-    return res.status(200).json(sharedCollections);
+    return res.status(status).json(sharedCollections);
   } catch (error) {
     console.error("Error fetching shared collections:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await ShareLogs.create({
+          action: "GET_SHARED",
+          userId: req.user.id,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging share action:", logError);
+      }
+    }
   }
 };
 
 exports.getCollectionShares = async (req, res) => {
+  let status = 200;
+  let collectionId = null;
   try {
-    const { collectionId } = req.params;
+    collectionId = req.params.collectionId;
     const userId = req.user.id;
 
     const collection = await Collection.findOne({
@@ -144,7 +214,8 @@ exports.getCollectionShares = async (req, res) => {
     });
 
     if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
+      status = 404;
+      return res.status(status).json({ message: "Collection not found" });
     }
 
     const shares = await CollectionShare.findAll({
@@ -158,16 +229,35 @@ exports.getCollectionShares = async (req, res) => {
       ],
     });
 
-    return res.status(200).json(shares);
+    return res.status(status).json(shares);
   } catch (error) {
     console.error("Error fetching collection shares:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await ShareLogs.create({
+          action: "GET_SHARES",
+          userId: req.user.id,
+          collectionId,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging share action:", logError);
+      }
+    }
   }
 };
 
 exports.updateSharePermission = async (req, res) => {
+  let status = 200;
+  let shareId = null;
+  let collectionId = null;
   try {
-    const { shareId } = req.params;
+    shareId = req.params.shareId;
     const { permission } = req.body;
     const userId = req.user.id;
 
@@ -176,22 +266,43 @@ exports.updateSharePermission = async (req, res) => {
     });
 
     if (!share) {
-      return res.status(404).json({ message: "Share not found" });
+      status = 404;
+      return res.status(status).json({ message: "Share not found" });
     }
 
+    collectionId = share.collectionId;
     share.permission = permission;
     await share.save();
 
-    return res.status(200).json(share);
+    return res.status(status).json(share);
   } catch (error) {
     console.error("Error updating share permission:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await ShareLogs.create({
+        action: "UPDATE",
+        userId: req.user.id,
+        shareId,
+        collectionId,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+        metadata: { permission: req.body.permission },
+      });
+    } catch (logError) {
+      console.error("Error logging share action:", logError);
+    }
   }
 };
 
 exports.removeShare = async (req, res) => {
+  let status = 200;
+  let shareId = null;
+  let collectionId = null;
   try {
-    const { shareId } = req.params;
+    shareId = req.params.shareId;
     const userId = req.user.id;
 
     const share = await CollectionShare.findOne({
@@ -199,20 +310,39 @@ exports.removeShare = async (req, res) => {
     });
 
     if (!share) {
-      return res.status(404).json({ message: "Share not found" });
+      status = 404;
+      return res.status(status).json({ message: "Share not found" });
     }
 
+    collectionId = share.collectionId;
+
     if (share.ownerId !== userId && share.sharedWithId !== userId) {
-      return res.status(403).json({ message: "Unauthorized" });
+      status = 403;
+      return res.status(status).json({ message: "Unauthorized" });
     }
 
     await share.destroy();
 
     return res
-      .status(200)
+      .status(status)
       .json({ message: "Collection access removed successfully" });
   } catch (error) {
     console.error("Error removing share:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await ShareLogs.create({
+        action: "DELETE",
+        userId: req.user.id,
+        shareId,
+        collectionId,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+      });
+    } catch (logError) {
+      console.error("Error logging share action:", logError);
+    }
   }
 };
