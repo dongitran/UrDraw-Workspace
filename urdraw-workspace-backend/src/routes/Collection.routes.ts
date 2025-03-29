@@ -5,6 +5,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { CollectionTable } from "db/schema";
 import dayjs from "dayjs";
+import { eq } from "drizzle-orm";
 
 const CollectionRoute = new Hono();
 CollectionRoute.use(VerifyToken());
@@ -158,6 +159,31 @@ CollectionRoute.post(
       .returning()
       .then((res) => res[0]);
     return ctx.json(collections);
+  }
+);
+CollectionRoute.put(
+  "/:id",
+  zValidator(
+    "json",
+    z.object({
+      name: z.string().min(3, "Ít nhất 3 ký tự"),
+    })
+  ),
+  async (ctx) => {
+    const user = ctx.get("user"),
+      id = ctx.req.param("id");
+    const { name } = ctx.req.valid("json");
+    const collection = await db.query.CollectionTable.findFirst({
+      where: (clm, { eq, and }) => and(eq(clm.id, id), eq(clm.userId, user.id)),
+    });
+    if (!collection) return ctx.json({ message: "Collection not found" }, 404);
+    const newCollection = await db
+      .update(CollectionTable)
+      .set({ name, updatedAt: dayjs().toISOString() })
+      .where(eq(CollectionTable.id, collection.id))
+      .returning()
+      .then((res) => res[0]);
+    return ctx.json(newCollection);
   }
 );
 export default CollectionRoute;
