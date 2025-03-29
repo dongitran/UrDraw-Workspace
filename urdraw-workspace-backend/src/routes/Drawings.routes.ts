@@ -11,8 +11,24 @@ import { z } from "zod";
 const DrawingRoutes = new Hono();
 DrawingRoutes.use(VerifyToken());
 
-DrawingRoutes.get("/", (ctx) => {
-  return ctx.json({ message: "ok" });
+DrawingRoutes.get("/:id", async (ctx) => {
+  const id = ctx.req.param("id");
+  const user = ctx.get("user");
+  const drawing = await db.query.DrawingTable.findFirst({
+    where: (clm, { eq, and }) => and(eq(clm.id, id)),
+  });
+  if (!drawing) return ctx.json({ message: "Drawing not found" }, 404);
+  const isOwner = drawing.userId === user.id;
+  if (!isOwner) {
+    const share = await db.query.CollectionShareTable.findFirst({
+      where: (clm, { eq, and }) =>
+        and(eq(clm.collectionId, drawing.collectionId!), eq(clm.sharedWithId, user.id), eq(clm.status, "accepted")),
+    });
+    if (!share) {
+      return ctx.json({ message: "You don't have permission to access this drawing" }, 403);
+    }
+  }
+  return ctx.json(drawing);
 });
 
 DrawingRoutes.post(
