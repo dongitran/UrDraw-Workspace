@@ -1,7 +1,9 @@
 const { models } = require("../models");
 const { Collection, Drawing, CollectionShare } = models;
+const CollectionLogs = require("../models/logs/collectionLogs");
 
 exports.getUserCollections = async (req, res) => {
+  let status = 200;
   try {
     const userId = req.user.id;
 
@@ -24,20 +26,37 @@ exports.getUserCollections = async (req, res) => {
       return plainCollection;
     });
 
-    return res.status(200).json(collectionsWithCount);
+    return res.status(status).json(collectionsWithCount);
   } catch (error) {
     console.error("Error fetching collections:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await CollectionLogs.create({
+          action: "GET",
+          userId: req.user.id,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging collection action:", logError);
+      }
+    }
   }
 };
 
 exports.getCollection = async (req, res) => {
+  let status = 200;
+  let collectionId = null;
   try {
-    const { id } = req.params;
+    collectionId = req.params.id;
     const userId = req.user.id;
 
     let collection = await Collection.findOne({
-      where: { id, userId },
+      where: { id: collectionId, userId },
       include: [
         {
           model: Drawing,
@@ -53,7 +72,7 @@ exports.getCollection = async (req, res) => {
     if (!collection) {
       const share = await CollectionShare.findOne({
         where: {
-          collectionId: id,
+          collectionId,
           sharedWithId: userId,
           status: "accepted",
         },
@@ -80,21 +99,40 @@ exports.getCollection = async (req, res) => {
     }
 
     if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
+      status = 404;
+      return res.status(status).json({ message: "Collection not found" });
     }
 
     const response = collection.get({ plain: true });
     response.isShared = isShared;
     response.permission = sharePermission;
 
-    return res.status(200).json(response);
+    return res.status(status).json(response);
   } catch (error) {
     console.error("Error fetching collection:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await CollectionLogs.create({
+          action: "GET",
+          userId: req.user.id,
+          collectionId,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging collection action:", logError);
+      }
+    }
   }
 };
 
 exports.createCollection = async (req, res) => {
+  let status = 201;
+  let collectionId = null;
   try {
     const { name } = req.body;
     const userId = req.user.id;
@@ -104,71 +142,131 @@ exports.createCollection = async (req, res) => {
       name,
     });
 
-    return res.status(201).json(collection);
+    collectionId = collection.id;
+    return res.status(status).json(collection);
   } catch (error) {
     console.error("Error creating collection:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await CollectionLogs.create({
+        action: "CREATE",
+        userId: req.user.id,
+        collectionId,
+        status,
+        message: status === 201 ? "Success" : "Failed",
+        error: status !== 201 ? { message: "Failed" } : null,
+        metadata: { name: req.body.name },
+      });
+    } catch (logError) {
+      console.error("Error logging collection action:", logError);
+    }
   }
 };
 
 exports.ensureDefaultCollection = async (userId) => {
+  let status = true;
+  let collectionId = null;
+  let isCreated = false;
   try {
     const collectionsCount = await Collection.count({ where: { userId } });
 
     if (collectionsCount === 0) {
-      await Collection.create({
+      const collection = await Collection.create({
         userId,
         name: "My Drawings",
       });
+      collectionId = collection.id;
+      isCreated = true;
     }
     return true;
   } catch (error) {
     console.error("Error creating default collection:", error);
+    status = false;
     return false;
+  } finally {
+    if (isCreated) {
+      try {
+        await CollectionLogs.create({
+          action: "CREATE",
+          userId,
+          collectionId,
+          status: status ? 201 : 500,
+          message: status ? "Success" : "Failed",
+          error: !status ? { message: "Failed" } : null,
+          metadata: { name: "My Drawings", isDefault: true },
+        });
+      } catch (logError) {
+        console.error("Error logging collection action:", logError);
+      }
+    }
   }
 };
 
 exports.updateCollection = async (req, res) => {
+  let status = 200;
+  let collectionId = null;
   try {
-    const { id } = req.params;
+    collectionId = req.params.id;
     const { name } = req.body;
     const userId = req.user.id;
 
     const collection = await Collection.findOne({
-      where: { id, userId },
+      where: { id: collectionId, userId },
     });
 
     if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
+      status = 404;
+      return res.status(status).json({ message: "Collection not found" });
     }
 
     collection.name = name || collection.name;
     await collection.save();
 
-    return res.status(200).json(collection);
+    return res.status(status).json(collection);
   } catch (error) {
     console.error("Error updating collection:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await CollectionLogs.create({
+        action: "UPDATE",
+        userId: req.user.id,
+        collectionId,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+        metadata: { name: req.body.name },
+      });
+    } catch (logError) {
+      console.error("Error logging collection action:", logError);
+    }
   }
 };
 
 exports.deleteCollection = async (req, res) => {
+  let status = 200;
+  let collectionId = null;
   try {
-    const { id } = req.params;
+    collectionId = req.params.id;
     const userId = req.user.id;
 
     const collection = await Collection.findOne({
-      where: { id, userId },
+      where: { id: collectionId, userId },
     });
 
     if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
+      status = 404;
+      return res.status(status).json({ message: "Collection not found" });
     }
 
     const collectionsCount = await Collection.count({ where: { userId } });
 
     if (collectionsCount <= 1) {
-      return res.status(400).json({
+      status = 400;
+      return res.status(status).json({
         message:
           "Cannot delete the only collection. Users must have at least one collection.",
       });
@@ -176,14 +274,31 @@ exports.deleteCollection = async (req, res) => {
 
     await collection.destroy();
 
-    return res.status(200).json({ message: "Collection deleted successfully" });
+    return res
+      .status(status)
+      .json({ message: "Collection deleted successfully" });
   } catch (error) {
     console.error("Error deleting collection:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await CollectionLogs.create({
+        action: "DELETE",
+        userId: req.user.id,
+        collectionId,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+      });
+    } catch (logError) {
+      console.error("Error logging collection action:", logError);
+    }
   }
 };
 
 exports.getAllCollectionsAndDrawings = async (req, res) => {
+  let status = 200;
   try {
     const userId = req.user.id;
 
@@ -233,12 +348,27 @@ exports.getAllCollectionsAndDrawings = async (req, res) => {
       ...formattedSharedCollections,
     ];
 
-    return res.status(200).json({
+    return res.status(status).json({
       collections: allCollections,
       drawings: drawings,
     });
   } catch (error) {
     console.error("Error fetching all collections and drawings:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await CollectionLogs.create({
+          action: "GET_ALL",
+          userId: req.user.id,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging collection action:", logError);
+      }
+    }
   }
 };

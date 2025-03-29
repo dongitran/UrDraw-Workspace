@@ -2,8 +2,10 @@ const { models } = require("../models");
 const { Drawing, Collection, CollectionShare } = models;
 const collectionController = require("./collectionController");
 const { v4: uuidv4 } = require("uuid");
+const DrawingLogs = require("../models/logs/drawingLogs");
 
 exports.getUserDrawings = async (req, res) => {
+  let status = 200;
   try {
     const userId = req.user.id;
 
@@ -12,16 +14,33 @@ exports.getUserDrawings = async (req, res) => {
       order: [["lastModified", "DESC"]],
     });
 
-    return res.status(200).json(drawings);
+    return res.status(status).json(drawings);
   } catch (error) {
     console.error("Error fetching drawings:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await DrawingLogs.create({
+          action: "GET",
+          userId: req.user.id,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging drawing action:", logError);
+      }
+    }
   }
 };
 
 exports.getCollectionDrawings = async (req, res) => {
+  let status = 200;
+  let collectionId = null;
   try {
-    const { collectionId } = req.params;
+    collectionId = req.params.collectionId;
     const userId = req.user.id;
 
     let collection = await Collection.findOne({
@@ -54,7 +73,8 @@ exports.getCollectionDrawings = async (req, res) => {
     }
 
     if (!collection) {
-      return res.status(404).json({ message: "Collection not found" });
+      status = 404;
+      return res.status(status).json({ message: "Collection not found" });
     }
 
     const drawings = await Drawing.findAll({
@@ -68,20 +88,38 @@ exports.getCollectionDrawings = async (req, res) => {
       permission: sharePermission,
     };
 
-    return res.status(200).json(response);
+    return res.status(status).json(response);
   } catch (error) {
     console.error("Error fetching collection drawings:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await DrawingLogs.create({
+          action: "GET",
+          userId: req.user.id,
+          collectionId,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging drawing action:", logError);
+      }
+    }
   }
 };
 
 exports.getDrawing = async (req, res) => {
+  let status = 200;
+  let drawingId = null;
   try {
-    const { id } = req.params;
+    drawingId = req.params.id;
     const userId = req.user.id;
 
     const drawing = await Drawing.findOne({
-      where: { id },
+      where: { id: drawingId },
       include: [
         {
           model: Collection,
@@ -91,7 +129,8 @@ exports.getDrawing = async (req, res) => {
     });
 
     if (!drawing) {
-      return res.status(404).json({ message: "Drawing not found" });
+      status = 404;
+      return res.status(status).json({ message: "Drawing not found" });
     }
 
     const isOwner = drawing.userId === userId;
@@ -106,27 +145,47 @@ exports.getDrawing = async (req, res) => {
       });
 
       if (!share) {
-        return res.status(403).json({
+        status = 403;
+        return res.status(status).json({
           message: "You don't have permission to access this drawing",
         });
       }
     }
 
-    return res.status(200).json(drawing);
+    return res.status(status).json(drawing);
   } catch (error) {
     console.error("Error fetching drawing:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    if (status !== 200) {
+      try {
+        await DrawingLogs.create({
+          action: "GET",
+          userId: req.user.id,
+          drawingId,
+          status,
+          message: "Failed",
+          error: { message: "Failed" },
+        });
+      } catch (logError) {
+        console.error("Error logging drawing action:", logError);
+      }
+    }
   }
 };
 
 exports.createDrawing = async (req, res) => {
+  let status = 201;
+  let drawingId = null;
+  let collectionId = null;
   try {
-    const { name, thumbnailUrl, collectionId } = req.body;
+    const { name, thumbnailUrl, collectionId: reqCollectionId } = req.body;
     const userId = req.user.id;
 
     await collectionController.ensureDefaultCollection(userId);
 
-    let targetCollectionId = collectionId;
+    let targetCollectionId = reqCollectionId;
     if (!targetCollectionId) {
       const defaultCollection = await Collection.findOne({
         where: { userId },
@@ -138,7 +197,8 @@ exports.createDrawing = async (req, res) => {
       }
     }
 
-    const drawingId = uuidv4();
+    collectionId = targetCollectionId;
+    drawingId = uuidv4();
 
     const drawing = await Drawing.create({
       id: drawingId,
@@ -149,21 +209,45 @@ exports.createDrawing = async (req, res) => {
       lastModified: new Date(),
     });
 
-    return res.status(201).json(drawing);
+    return res.status(status).json(drawing);
   } catch (error) {
     console.error("Error creating drawing:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await DrawingLogs.create({
+        action: "CREATE",
+        userId: req.user.id,
+        drawingId,
+        collectionId,
+        status,
+        message: status === 201 ? "Success" : "Failed",
+        error: status !== 201 ? { message: "Failed" } : null,
+        metadata: { name: req.body.name },
+      });
+    } catch (logError) {
+      console.error("Error logging drawing action:", logError);
+    }
   }
 };
 
 exports.updateDrawing = async (req, res) => {
+  let status = 200;
+  let drawingId = null;
+  let collectionId = null;
   try {
-    const { id } = req.params;
-    const { name, content, thumbnailUrl, collectionId } = req.body;
+    drawingId = req.params.id;
+    const {
+      name,
+      content,
+      thumbnailUrl,
+      collectionId: reqCollectionId,
+    } = req.body;
     const userId = req.user.id;
 
     const drawing = await Drawing.findOne({
-      where: { id },
+      where: { id: drawingId },
       include: [
         {
           model: Collection,
@@ -173,9 +257,11 @@ exports.updateDrawing = async (req, res) => {
     });
 
     if (!drawing) {
-      return res.status(404).json({ message: "Drawing not found" });
+      status = 404;
+      return res.status(status).json({ message: "Drawing not found" });
     }
 
+    collectionId = drawing.collectionId;
     const isOwner = drawing.userId === userId;
 
     if (!isOwner) {
@@ -189,61 +275,110 @@ exports.updateDrawing = async (req, res) => {
       });
 
       if (!share) {
-        return res
-          .status(403)
-          .json({ message: "You don't have permission to edit this drawing" });
+        status = 403;
+        return res.status(status).json({
+          message: "You don't have permission to edit this drawing",
+        });
       }
     }
 
-    if (collectionId && collectionId !== drawing.collectionId) {
+    if (reqCollectionId && reqCollectionId !== drawing.collectionId) {
       if (!isOwner) {
-        return res.status(403).json({
+        status = 403;
+        return res.status(status).json({
           message: "Only the owner can move drawings between collections",
         });
       }
 
       const targetCollection = await Collection.findOne({
-        where: { id: collectionId, userId },
+        where: { id: reqCollectionId, userId },
       });
 
       if (!targetCollection) {
-        return res.status(404).json({ message: "Target collection not found" });
+        status = 404;
+        return res
+          .status(status)
+          .json({ message: "Target collection not found" });
       }
+
+      collectionId = reqCollectionId;
     }
 
     drawing.name = name || drawing.name;
     if (content) drawing.content = content;
     if (thumbnailUrl) drawing.thumbnailUrl = thumbnailUrl;
-    if (collectionId && isOwner) drawing.collectionId = collectionId;
+    if (reqCollectionId && isOwner) drawing.collectionId = reqCollectionId;
     drawing.lastModified = new Date();
 
     await drawing.save();
 
-    return res.status(200).json(drawing);
+    return res.status(status).json(drawing);
   } catch (error) {
     console.error("Error updating drawing:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await DrawingLogs.create({
+        action: "UPDATE",
+        userId: req.user.id,
+        drawingId,
+        collectionId,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+        metadata: {
+          name: req.body.name,
+          hasContent: !!req.body.content,
+          hasThumbnail: !!req.body.thumbnailUrl,
+          collectionChanged:
+            req.body.collectionId && req.body.collectionId !== collectionId,
+        },
+      });
+    } catch (logError) {
+      console.error("Error logging drawing action:", logError);
+    }
   }
 };
 
 exports.deleteDrawing = async (req, res) => {
+  let status = 200;
+  let drawingId = null;
+  let collectionId = null;
   try {
-    const { id } = req.params;
+    drawingId = req.params.id;
     const userId = req.user.id;
 
     const drawing = await Drawing.findOne({
-      where: { id, userId },
+      where: { id: drawingId, userId },
     });
 
     if (!drawing) {
-      return res.status(404).json({ message: "Drawing not found" });
+      status = 404;
+      return res.status(status).json({ message: "Drawing not found" });
     }
 
+    collectionId = drawing.collectionId;
     await drawing.destroy();
 
-    return res.status(200).json({ message: "Drawing deleted successfully" });
+    return res.status(status).json({ message: "Drawing deleted successfully" });
   } catch (error) {
     console.error("Error deleting drawing:", error);
-    return res.status(500).json({ message: "Server error" });
+    status = 500;
+    return res.status(status).json({ message: "Server error" });
+  } finally {
+    try {
+      await DrawingLogs.create({
+        action: "DELETE",
+        userId: req.user.id,
+        drawingId,
+        collectionId,
+        status,
+        message: status === 200 ? "Success" : "Failed",
+        error: status !== 200 ? { message: "Failed" } : null,
+      });
+    } catch (logError) {
+      console.error("Error logging drawing action:", logError);
+    }
   }
 };

@@ -4,6 +4,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 const { sequelize } = require("./models");
 const routes = require("./routes");
+const { connectToMongoDB } = require("./config/mongodb");
 
 const app = express();
 const PORT = process.env.PORT || 3009;
@@ -22,6 +23,8 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   try {
+    await connectToMongoDB();
+
     await sequelize.sync({ alter: true });
     console.log("Database synced successfully");
 
