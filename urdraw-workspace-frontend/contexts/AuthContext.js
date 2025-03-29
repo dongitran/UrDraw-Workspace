@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
                   console.error("Token refresh error:", refreshError);
                   await handleLogout();
                 }
-              }, 10000);
+              }, 60_000);
             }
 
             setLoading(false);

@@ -1,5 +1,6 @@
 const { models } = require("../models");
 const { Collection, Drawing, CollectionShare } = models;
+const { z } = require("zod");
 
 exports.getUserCollections = async (req, res) => {
   try {
@@ -96,18 +97,20 @@ exports.getCollection = async (req, res) => {
 
 exports.createCollection = async (req, res) => {
   try {
-    const { name } = req.body;
+    const Body = z.object({ name: z.string().min(3, "Ít nhât phải 3 ký tự"), type: z.string() });
+    const result = Body.safeParse(req.body);
+    if (!result.success) {
+      return res.status(500).json({ error: result.error.format() });
+    }
+
     const userId = req.user.id;
 
-    const collection = await Collection.create({
-      userId,
-      name,
-    });
+    const collection = await Collection.create({ userId, name });
 
     return res.status(201).json(collection);
   } catch (error) {
     console.error("Error creating collection:", error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error", error });
   }
 };
 
@@ -169,8 +172,7 @@ exports.deleteCollection = async (req, res) => {
 
     if (collectionsCount <= 1) {
       return res.status(400).json({
-        message:
-          "Cannot delete the only collection. Users must have at least one collection.",
+        message: "Cannot delete the only collection. Users must have at least one collection.",
       });
     }
 
@@ -206,13 +208,7 @@ exports.getAllCollectionsAndDrawings = async (req, res) => {
 
     const drawings = await Drawing.findAll({
       where: { userId },
-      attributes: [
-        "id",
-        "name",
-        "thumbnailUrl",
-        "collectionId",
-        "lastModified",
-      ],
+      attributes: ["id", "name", "thumbnailUrl", "collectionId", "lastModified"],
       order: [["lastModified", "DESC"]],
     });
 
