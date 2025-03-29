@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { initKeycloak } from "@/lib/keycloak";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -35,10 +36,15 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <div className="w-32 h-32 relative">
-              <div className="bg-blue-600 rounded-full p-4 flex items-center justify-center">
-                <span className="text-white text-3xl font-bold">UrDraw</span>
-              </div>
+            <div className="w-96 h-48 relative">
+              <Image
+                src="https://s0.dtur.xyz/cover/urdraw-image-1.svg"
+                alt="Logo"
+                width={480}
+                height={480}
+                priority
+                className="object-contain"
+              />
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
