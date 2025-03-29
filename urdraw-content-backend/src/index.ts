@@ -122,7 +122,7 @@ app.put("/drawing/:id", async (req: Request, res: Response) => {
 
     const updateTime = new Date();
 
-    if (content !== undefined && content !== null) {
+    if (content) {
       drawing.set("content", content);
     }
     drawing.set("updatedAt", updateTime);

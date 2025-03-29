@@ -1,4 +1,21 @@
 const jwt = require("jsonwebtoken");
+const jwksClient = require("jwks-rsa");
+require("dotenv").config();
+
+const client = jwksClient({
+  jwksUri: `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/certs`,
+  cache: true,
+  rateLimit: true,
+});
+
+function getKey(header, callback) {
+  client.getSigningKey(header.kid, function (err, key) {
+    if (err) return callback(err);
+
+    const signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -9,28 +26,28 @@ const verifyToken = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
-  try {
-    const decoded = jwt.decode(token, { complete: true });
+  jwt.verify(
+    token,
+    getKey,
+    {
+      algorithms: ["RS256"],
+      issuer: `${process.env.KEYCLOAK_URL}/realms/${process.env.KEYCLOAK_REALM}`,
+    },
+    function (err, decoded) {
+      if (err) {
+        console.error("Token verification error:", err);
+        return res.status(401).json({ message: "Unauthorized: Invalid token" });
+      }
 
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+      req.user = {
+        id: decoded.sub,
+        username: decoded.preferred_username,
+        email: decoded.email,
+      };
+
+      next();
     }
-
-    const now = Math.floor(Date.now() / 1000);
-    if (decoded.payload.exp && decoded.payload.exp < now) {
-      return res.status(401).json({ message: "Unauthorized: Token expired" });
-    }
-
-    req.user = {
-      id: decoded.payload.sub,
-      username: decoded.payload.preferred_username,
-      email: decoded.payload.email,
-    };
-
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
-  }
+  );
 };
 
 module.exports = {
