@@ -19,6 +19,7 @@
     "express-validator": "^7.0.1",
     "hono": "^4.7.5",
     "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.2.0",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "pg": "^8.14.1",

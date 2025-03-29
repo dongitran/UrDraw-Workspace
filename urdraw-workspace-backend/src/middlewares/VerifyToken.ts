@@ -1,7 +1,21 @@
 import type { MiddlewareHandler } from "hono";
 import jwt from "jsonwebtoken";
 import { get } from "lodash";
+import jwksClient from "jwks-rsa";
 
+const client = jwksClient({
+  jwksUri: `${Bun.env.KEYCLOAK_URL}/realms/${Bun.env.KEYCLOAK_REALM}/protocol/openid-connect/certs`,
+  cache: true,
+  rateLimit: true,
+});
+function getKey(header, callback) {
+  client.getSigningKey(header.kid, (err, key) => {
+    if (err || !key) return callback(err);
+
+    const signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
 type User = {
   id: string;
   username: string;
@@ -20,21 +34,30 @@ const VerifyToken = (): MiddlewareHandler => {
     }
     const token = authHeader.split(" ")[1];
     try {
-      const decoded = jwt.decode(token, { complete: true });
-      if (!decoded) {
-        return ctx.json({ message: "Unauthorized: Invalid token" }, 401);
-      }
-      const now = Math.floor(Date.now() / 1000);
-      if (get(decoded, "payload.exp") && get(decoded, "payload.exp")! < now) {
-        return ctx.json({ message: "Unauthorized: Token expired" }, 401);
-      }
-      ctx.set("user", {
-        id: get(decoded, "payload.sub") as string,
-        username: get(decoded, "payload.preferred_username"),
-        email: get(decoded, "payload.email"),
+      const decoded = await new Promise((resolve, reject) => {
+        jwt.verify(
+          token,
+          getKey,
+          {
+            algorithms: ["RS256"],
+            issuer: `${Bun.env.KEYCLOAK_URL}/realms/${Bun.env.KEYCLOAK_REALM}`,
+          },
+          (err, decoded) => {
+            if (err) reject(err);
+            else resolve(decoded);
+          }
+        );
       });
+
+      ctx.set("user", {
+        id: get(decoded, "sub")! as string,
+        username: get(decoded, "preferred_username")!,
+        email: get(decoded, "email")!,
+      });
+
       await next();
     } catch (error) {
+      console.error("error :>> ", error);
       return ctx.json({ message: "Unauthorized: Invalid token" }, 401);
     }
   };
