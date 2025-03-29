@@ -122,4 +122,16 @@ DrawingRoutes.put(
   }
 );
 
+DrawingRoutes.delete("/:id", async (ctx) => {
+  const id = ctx.req.param("id");
+  const userId = ctx.get("user");
+  const drawing = await db.query.DrawingTable.findFirst({
+    where: (clm, { eq, and }) => and(eq(clm.id, id), eq(clm.userId, userId.id)),
+  });
+  if (!drawing) return ctx.json({ message: "Drawing not found" }, 404);
+
+  await db.delete(DrawingTable).where(eq(DrawingTable.id, drawing.id));
+
+  return ctx.json({ message: "Drawing deleted successfully" });
+});
 export default DrawingRoutes;
