@@ -6,13 +6,14 @@ import { getAllCollectionsAndDrawings } from "@/lib/api";
 import { getToken } from "@/lib/keycloak";
 import { buildUrDrawUrl } from "@/lib/config";
 
-export default function SearchBar() {
+export default function SearchBar({ isMobile = false, onCancel = null }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [allData, setAllData] = useState(null);
   const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,6 +31,12 @@ export default function SearchBar() {
 
     fetchAllData();
   }, []);
+
+  useEffect(() => {
+    if (isMobile && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -89,6 +96,10 @@ export default function SearchBar() {
     setShowResults(false);
     setSearchQuery("");
 
+    if (isMobile && onCancel) {
+      onCancel();
+    }
+
     if (result.type === "collection") {
       router.push(`/workspace/collection/${result.id}`);
     } else if (result.type === "drawing") {
@@ -107,37 +118,46 @@ export default function SearchBar() {
     }
   };
 
+  const handleCancelSearch = () => {
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
   return (
-    <div className="relative w-full max-w-md mx-4" ref={searchContainerRef}>
-      <div className="relative">
-        <input
-          type="text"
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Search collections and drawings..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          onFocus={() => {
-            if (searchQuery.trim() !== "") {
-              setShowResults(true);
-            }
-          }}
-        />
-        <svg
-          className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-        >
-          <path
-            fillRule="evenodd"
-            d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-            clipRule="evenodd"
+    <div
+      className={`relative w-full ${!isMobile ? "max-w-md mx-4" : ""}`}
+      ref={searchContainerRef}
+    >
+      <div className="relative flex items-center">
+        <div className="relative flex-grow">
+          <input
+            ref={searchInputRef}
+            type="text"
+            className="w-full px-4 py-2 border border-blue-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Search collections and drawings..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={() => {
+              if (searchQuery.trim() !== "") {
+                setShowResults(true);
+              }
+            }}
           />
-        </svg>
+        </div>
+
+        {isMobile && (
+          <button
+            className="ml-3 text-gray-500 font-medium"
+            onClick={handleCancelSearch}
+          >
+            Cancel
+          </button>
+        )}
       </div>
 
       {showResults && (
-        <div className="absolute w-full mt-1 bg-white rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute w-full mt-1 bg-white rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">Loading...</div>
           ) : searchResults.length === 0 ? (
