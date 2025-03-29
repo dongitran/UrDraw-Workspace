@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -30,6 +30,9 @@ export default function WorkspacePage() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const actionButtonRef = useRef(null);
+  const actionMenuRef = useRef(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated()) {
@@ -42,6 +45,25 @@ export default function WorkspacePage() {
       loadCollections();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isActionMenuOpen &&
+        actionMenuRef.current &&
+        !actionMenuRef.current.contains(event.target) &&
+        actionButtonRef.current &&
+        !actionButtonRef.current.contains(event.target)
+      ) {
+        setIsActionMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isActionMenuOpen]);
 
   const loadCollections = async () => {
     try {
@@ -126,6 +148,20 @@ export default function WorkspacePage() {
     setNotification({ message, type });
   };
 
+  const handleActionClick = () => {
+    setIsActionMenuOpen(!isActionMenuOpen);
+  };
+
+  const openJoinModal = () => {
+    setIsActionMenuOpen(false);
+    setIsJoinModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setIsActionMenuOpen(false);
+    setIsCreateModalOpen(true);
+  };
+
   if (
     authLoading ||
     (loading && !collections.length && !sharedCollections.length)
@@ -147,19 +183,77 @@ export default function WorkspacePage() {
         />
       )}
 
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold mb-4">My Collections</h2>
-          <div className="flex space-x-2">
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-medium">My Collections</h2>
+          <div className="md:hidden relative">
+            <button
+              ref={actionButtonRef}
+              onClick={handleActionClick}
+              className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
+              </svg>
+              Actions
+            </button>
+
+            {isActionMenuOpen && (
+              <div
+                ref={actionMenuRef}
+                className="absolute z-10 right-0 mt-2 w-48 bg-white rounded-lg shadow-lg overflow-hidden"
+              >
+                <button
+                  onClick={openJoinModal}
+                  className="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100 border-b border-gray-200"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 text-green-600"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                  </svg>
+                  Join Collection
+                </button>
+                <button
+                  onClick={openCreateModal}
+                  className="w-full text-left px-4 py-3 flex items-center hover:bg-gray-100"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 text-blue-600"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Create Collection
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="hidden md:flex space-x-3">
             <button
               onClick={() => setIsJoinModalOpen(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
               Join Collection
             </button>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="btn-primary"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Create Collection
             </button>
@@ -202,7 +296,7 @@ export default function WorkspacePage() {
 
       {sharedCollections.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Shared With Me</h2>
+          <h2 className="text-lg font-medium mb-4">Shared With Me</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {sharedCollections.map((collection) => (
               <div key={collection.id} className="relative">
