@@ -8,7 +8,7 @@ ENV PORT=3020
 COPY . .
 
 RUN apt update && apt install -y wget
-RUN bun install
+RUN bun install --frozen-lockfile
 
 EXPOSE 3020
 
