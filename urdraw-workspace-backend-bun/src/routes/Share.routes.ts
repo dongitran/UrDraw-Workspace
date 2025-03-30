@@ -56,7 +56,7 @@ ShareRoute.post(
     z.object({
       collectionId: z.string(),
       permission: z.enum(["view", "edit"]),
-      expiresInDays: z.string().optional(),
+      expiresInDays: z.number().optional(),
     })
   ),
   async (ctx) => {
