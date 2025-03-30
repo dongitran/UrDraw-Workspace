@@ -15,4 +15,4 @@ EXPOSE 3020
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD wget -qO- http://localhost:3020/health || exit 1
 
-CMD ["bun", "run", "dev"]
+CMD ["/bin/sh", "-c", ". /vault/secrets/env-config && bun run start"]
