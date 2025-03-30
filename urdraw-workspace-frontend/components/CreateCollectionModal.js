@@ -70,7 +70,7 @@ export default function CreateCollectionModal({ isOpen, onClose, onCreate }) {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              Create Collection 123
+              Create Collection
             </button>
           </div>
         </form>

@@ -18,6 +18,10 @@ import JoinCollectionModal from "@/components/JoinCollectionModal";
 import Notification from "@/components/Notification";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { toast } from "sonner";
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+
+dayjs.extend(advancedFormat);
 
 export default function WorkspacePage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -122,10 +126,12 @@ export default function WorkspacePage() {
     try {
       await deleteCollection(collectionId);
       setCollections(collections.filter((c) => c.id !== collectionId));
-      showNotification("Collection deleted successfully", "success");
+      toast.message("Collection deleted successfully", {
+        description: dayjs().format("dddd, MMMM Do [at] h:mma"),
+      });
     } catch (error) {
       console.error("Error deleting collection:", error);
-      showNotification("Error deleting collection", "error");
+      // showNotification("Error deleting collection", "error");
     }
   };
 
@@ -258,7 +264,7 @@ export default function WorkspacePage() {
                 <button
                   onClick={() => handleShareCollection(collection)}
                   className="absolute top-2 left-2 p-1 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 text-blue-600"
-                  title="Share Collection"
+                  title="Share Collection1231"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
