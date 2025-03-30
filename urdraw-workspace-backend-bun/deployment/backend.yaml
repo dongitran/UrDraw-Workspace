@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: urdraw-workspace-backend-bun
+  namespace: urdraw
+  labels:
+    app: urdraw-workspace-backend-bun
+spec:
+  serviceName: urdraw-workspace-backend-bun
+  replicas: 2
+  selector:
+    matchLabels:
+      app: urdraw-workspace-backend-bun
+  template:
+    metadata:
+      labels:
+        app: urdraw-workspace-backend-bun
+      annotations:
+        vault.hashicorp.com/agent-inject: 'true'
+        vault.hashicorp.com/role: 'urdraw-workspace-backend-bun-dev'
+        vault.hashicorp.com/agent-pre-populate-only: 'true'
+        vault.hashicorp.com/agent-inject-secret-env-config: 'kv/urdraw-workspace-backend-bun-dev'
+        vault.hashicorp.com/agent-inject-template-env-config: |
+            {{ with secret "kv/urdraw-workspace-backend-bun-dev" -}}
+              {{- range $key, $value := .Data.data }}
+                export {{ $key }}="{{ $value }}"
+              {{- end }}
+            {{- end }}
+    spec:
+      serviceAccountName: urdraw-workspace-backend-bun-dev-auth
+      containers:
+        - name: urdraw-workspace-backend-bun
+          image: ideavn/urdraw-workspace-backend-bun:v{latest}
+          ports:
+            - containerPort: 3020
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+            requests:
+              cpu: 64m
+              memory: 64m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: urdraw-workspace-backend-bun-service
+  namespace: urdraw
+spec:
+  selector:
+    app: urdraw-workspace-backend-bun
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 3020
+      targetPort: 3020
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: urdraw-workspace-backend-bun-ingress
+  namespace: urdraw
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+spec:
+  rules:
+  - host: api-wb.urdraw.click
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: urdraw-workspace-backend-bun-service
+            port:
+              number: 3020
