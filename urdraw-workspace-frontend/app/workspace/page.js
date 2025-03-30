@@ -174,7 +174,7 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="">
+    <div className="container mx-auto p-4">
       {notification && (
         <Notification
           message={notification.message}

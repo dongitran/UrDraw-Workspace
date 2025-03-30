@@ -4,8 +4,8 @@
   "description": "Backend for managing UrDraw drawings",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
     "dev": "bun --watch server.ts",
+    "start": "bun server.ts",
     "test": "echo \"No tests yet\""
   },
   "dependencies": {
