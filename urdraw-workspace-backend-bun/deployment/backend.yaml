@@ -32,7 +32,7 @@ spec:
         - name: urdraw-workspace-backend-bun
           image: ideavn/urdraw-workspace-backend-bun:v{latest}
           ports:
-            - containerPort: 3019
+            - containerPort: 3020
           resources:
             limits:
               cpu: 1000m
@@ -52,8 +52,8 @@ spec:
   type: ClusterIP
   ports:
     - protocol: TCP
-      port: 3019
-      targetPort: 3019
+      port: 3020
+      targetPort: 3020
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -74,4 +74,4 @@ spec:
           service:
             name: urdraw-workspace-backend-bun-service
             port:
-              number: 3019
+              number: 3020
