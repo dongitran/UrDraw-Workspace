@@ -1,3 +1,0 @@
-docker build -t urdraw-workspace-be .
-
-docker run -p 3019:3019 --env-file .env urdraw-workspace-be
