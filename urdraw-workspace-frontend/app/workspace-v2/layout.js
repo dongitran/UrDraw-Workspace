@@ -42,6 +42,8 @@ export default function WorkspaceLayout({ children }) {
         <LoadingSpinner size="large" message="Loading workspace..." />
       </div>
     );
+  } else if (!isAuthenticated()) {
+    return;
   }
 
   return (

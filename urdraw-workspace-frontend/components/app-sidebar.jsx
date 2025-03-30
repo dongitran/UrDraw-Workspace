@@ -32,13 +32,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "https://ui.shadcn.com/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "My Workspace",
@@ -141,6 +137,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }) {
+  const { user } = useAuth();
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -161,7 +158,13 @@ export function AppSidebar({ ...props }) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            avatar: "https://ui.shadcn.com/avatars/shadcn.jpg",
+            username: user.username,
+            email: user.email || "m@shadcn.com",
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   );
