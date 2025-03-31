@@ -35,17 +35,17 @@ const data = {
   navMain: [
     {
       title: "My Workspace",
-      url: "#",
+      url: "/workspace-v2/1",
       icon: LayoutDashboardIcon,
     },
     {
       title: "My Workspace 2",
-      url: "#",
+      url: "/workspace-v2/2",
       icon: ListIcon,
     },
     {
       title: "My UrBox Workspace",
-      url: "#",
+      url: "/workspace-v2/3",
       icon: BarChartIcon,
     },
   ],

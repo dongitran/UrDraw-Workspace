@@ -1,8 +1,5 @@
 "use client";
 
-import { MailIcon, PlusCircleIcon } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -10,8 +7,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { PlusCircleIcon } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
 export function NavMain({ items }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -28,8 +30,13 @@ export function NavMain({ items }) {
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
+            <SidebarMenuItem
+              key={item.title}
+              onClick={() => {
+                router.push(item.url);
+              }}
+            >
+              <SidebarMenuButton tooltip={item.title} isActive={pathname === item.url}>
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
               </SidebarMenuButton>
