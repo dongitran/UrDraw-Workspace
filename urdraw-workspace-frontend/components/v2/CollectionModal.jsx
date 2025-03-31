@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { createCollection, updateCollection } from "@/lib/api";
+import { createCollection, deleteCollection, updateCollection } from "@/lib/api";
 
 const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpenCollectionModal }) => {
   const [name, setName] = useState(collection.name);
@@ -46,7 +46,48 @@ const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpe
       toast.error("Edit collection name failed");
     }
   };
-  if (openCollectionModal === "edit") {
+  const onDelete = async () => {
+    if (!collection.id) {
+      toast.warning("Mã ID của collection không được tìm thấy");
+      return;
+    }
+    try {
+      await deleteCollection(collection.id);
+      setOpenCollectionModal(null);
+      if (refetch) refetch();
+      toast.success("Delete collection name successfully");
+    } catch (error) {
+      console.log("error :>> ", error);
+      toast.error("Delete collection name failed");
+    }
+  };
+  if (openCollectionModal === "delete") {
+    return (
+      <Fragment>
+        <Dialog open={!!openCollectionModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete collection</DialogTitle>
+              <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  if (setOpenCollectionModal) setOpenCollectionModal();
+                }}
+              >
+                Close
+              </Button>
+              <Button onClick={onDelete} variant="destructive">
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Fragment>
+    );
+  } else if (openCollectionModal === "edit") {
     return (
       <Fragment>
         <Dialog open={!!openCollectionModal}>
@@ -85,8 +126,7 @@ const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpe
         </Dialog>
       </Fragment>
     );
-  }
-  if (openCollectionModal === "create") {
+  } else if (openCollectionModal === "create") {
     return (
       <Fragment>
         <Dialog open={!!openCollectionModal}>
@@ -125,8 +165,7 @@ const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpe
         </Dialog>
       </Fragment>
     );
-  }
-  if (openCollectionModal === "join") {
+  } else if (openCollectionModal === "join") {
     return (
       <Fragment>
         <Dialog open={!!openCollectionModal}>

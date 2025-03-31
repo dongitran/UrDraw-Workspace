@@ -27,8 +27,8 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
   const queryClient = useQueryClient();
 
   const [openCollectionModal, setOpenCollectionModal] = useState("");
-  const handleClickMenu = async () => {
-    setOpenCollectionModal("edit");
+  const handleClickMenu = async (type) => {
+    setOpenCollectionModal(type);
   };
   return (
     <Fragment>
@@ -60,13 +60,13 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-64">
-          <ContextMenuItem inset onClick={handleClickMenu}>
+          <ContextMenuItem inset onClick={() => handleClickMenu("edit")}>
             Edit Name
             <ContextMenuShortcut>
               <Pen className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset>
+          <ContextMenuItem inset onClick={() => handleClickMenu("delete")}>
             Delete Collection
             <ContextMenuShortcut>
               <Trash2 className="h-4 w-4" />
