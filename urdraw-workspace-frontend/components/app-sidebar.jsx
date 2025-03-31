@@ -1,8 +1,6 @@
 "use client";
 
-import * as React from "react";
 import {
-  ArrowUpCircleIcon,
   BarChartIcon,
   CameraIcon,
   ClipboardListIcon,
@@ -10,13 +8,12 @@ import {
   FileCodeIcon,
   FileIcon,
   FileTextIcon,
-  FolderIcon,
   HelpCircleIcon,
   LayoutDashboardIcon,
+  Lightbulb,
   ListIcon,
   SearchIcon,
   SettingsIcon,
-  UsersIcon,
 } from "lucide-react";
 
 import { NavDocuments } from "@/components/nav-documents";
@@ -145,8 +142,8 @@ export function AppSidebar({ ...props }) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
               <a href="#">
-                <ArrowUpCircleIcon className="h-5 w-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <Lightbulb className="h-5 w-5" />
+                <span className="text-base font-semibold">Ur Draw</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
