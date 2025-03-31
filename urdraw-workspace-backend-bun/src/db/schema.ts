@@ -1,5 +1,4 @@
 import { pgTable, uuid, varchar, timestamp, foreignKey, text, unique, pgEnum } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
 
 export const enumCollectionSharesPermission = pgEnum("enum_collection_shares_permission", ["view", "edit"]);
 export const enumCollectionSharesStatus = pgEnum("enum_collection_shares_status", ["pending", "accepted"]);
