@@ -72,7 +72,7 @@ ShareRoute.post(
     let expiresAt = null;
     if (expiresInDays) {
       expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + parseInt(expiresInDays));
+      expiresAt.setDate(expiresAt.getDate() + expiresInDays);
     }
     const share = await db
       .insert(CollectionShareTable)
