@@ -11,10 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { createCollection } from "@/lib/api";
+import { createCollection, updateCollection } from "@/lib/api";
 
-const CollectionModal = ({ refetch, openCollectionModal, setOpenCollectionModal }) => {
-  const [name, setName] = useState();
+const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpenCollectionModal }) => {
+  const [name, setName] = useState(collection.name);
   const onSave = async () => {
     try {
       await createCollection({ name });
@@ -28,7 +28,63 @@ const CollectionModal = ({ refetch, openCollectionModal, setOpenCollectionModal 
     } finally {
     }
   };
+  const onEdit = async () => {
+    if (!collection.id) {
+      toast.warning("Mã ID của collection không được tìm thấy");
+      return;
+    }
+    try {
+      await updateCollection(collection.id, {
+        name,
+      });
+      setOpenCollectionModal(null);
+      setName("");
+      if (refetch) refetch();
+      toast.success("Edit collection name successfully");
+    } catch (error) {
+      console.log("error :>> ", error);
+      toast.error("Edit collection name failed");
+    }
+  };
   if (openCollectionModal === "edit") {
+    return (
+      <Fragment>
+        <Dialog open={!!openCollectionModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit collection name</DialogTitle>
+              <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-1 items-center gap-4">
+                <Label htmlFor="name" className="">
+                  Name
+                </Label>
+                <Input
+                  onChange={(e) => {
+                    setName(e.target.value);
+                  }}
+                  value={name}
+                  id="name"
+                  className="col-span-3"
+                  placeholder="Enter collection name"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  if (setOpenCollectionModal) setOpenCollectionModal();
+                }}
+              >
+                Close
+              </Button>
+              <Button onClick={onEdit}>Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Fragment>
+    );
   }
   if (openCollectionModal === "create") {
     return (

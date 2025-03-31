@@ -1,4 +1,4 @@
-const { Fragment } = require("react");
+const { Fragment, useState } = require("react");
 import { Card, CardHeader, CardDescription, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import dayjs from "dayjs";
@@ -18,8 +18,18 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Pen, Share2, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import CollectionModal from "@/components/v2/CollectionModal";
+import { useQueryClient } from "@tanstack/react-query";
 
-const CollectionCard = ({ collection = {} }) => {
+const CollectionCard = ({ queryKey, collection = {} }) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const [openCollectionModal, setOpenCollectionModal] = useState("");
+  const handleClickMenu = async () => {
+    setOpenCollectionModal("edit");
+  };
   return (
     <Fragment>
       <ContextMenu>
@@ -27,7 +37,7 @@ const CollectionCard = ({ collection = {} }) => {
           <Card
             className="@container/card rounded-sm shadow-lg hover:shadow-slate-700"
             onDoubleClick={() => {
-              console.log("12312 :>> ", 12312);
+              router.push(`/workspace-v2/collection/${collection.id}`);
             }}
           >
             <CardHeader className="relative">
@@ -50,7 +60,7 @@ const CollectionCard = ({ collection = {} }) => {
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-64">
-          <ContextMenuItem inset>
+          <ContextMenuItem inset onClick={handleClickMenu}>
             Edit Name
             <ContextMenuShortcut>
               <Pen className="h-4 w-4" />
@@ -96,6 +106,14 @@ const CollectionCard = ({ collection = {} }) => {
           </ContextMenuRadioGroup>
         </ContextMenuContent>
       </ContextMenu>
+      <CollectionModal
+        refetch={() => {
+          queryClient.invalidateQueries(queryKey);
+        }}
+        openCollectionModal={openCollectionModal}
+        setOpenCollectionModal={setOpenCollectionModal}
+        collection={collection}
+      />
     </Fragment>
   );
 };

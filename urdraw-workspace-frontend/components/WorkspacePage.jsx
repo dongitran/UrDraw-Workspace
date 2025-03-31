@@ -1,17 +1,19 @@
 "use client";
 import { ComboboxDemo } from "@/components/Combobox";
+import CollectionCard from "@/components/v2/CollectionCard";
 import { fetchUserCollections } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { castArray, compact, get } from "lodash";
-import { Button } from "./ui/button";
-import CollectionCard from "@/components/v2/CollectionCard";
+import { castArray, compact } from "lodash";
 import { Fragment, useState } from "react";
+import { Button } from "./ui/button";
 import CollectionModal from "./v2/CollectionModal";
-
+import { useParams } from "next/navigation";
 export function WorkspacePage() {
+  const { id } = useParams();
   const [openCollectionModal, setOpenCollectionModal] = useState("");
+  const queryKey = ["all/data" + id];
   const { data, refetch } = useQuery({
-    queryKey: ["all/data"],
+    queryKey,
     queryFn: () => {
       return fetchUserCollections();
     },
@@ -39,7 +41,7 @@ export function WorkspacePage() {
       </div>
       <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-1 gap-3">
         {castArray(compact(data)).map((collection) => {
-          return <CollectionCard collection={collection} key={collection.id} />;
+          return <CollectionCard queryKey={queryKey} collection={collection} key={collection.id} />;
         })}
       </div>
       <CollectionModal
