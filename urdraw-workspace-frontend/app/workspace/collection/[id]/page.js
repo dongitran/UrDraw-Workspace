@@ -109,15 +109,15 @@ export default function CollectionPage() {
         collectionId,
         thumbnailUrl: generateRandomThumbnail(name),
         content: JSON.stringify({
-          type: type,
+          type,
           version: 2,
           source: "urdraw-workspace",
           elements: [],
         }),
-        type: type,
+        type,
       });
 
-      initializeDrawingContent(newDrawing.id, name).catch((err) =>
+      initializeDrawingContent(newDrawing.id, name, type).catch((err) =>
         console.error("Error initializing drawing content:", err)
       );
 
