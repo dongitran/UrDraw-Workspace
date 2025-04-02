@@ -261,4 +261,22 @@ export const getAllCollectionsAndDrawings = async () => {
   }
 };
 
+export const getDrawingContentFromBackend = async (drawingId) => {
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const token = getToken();
+
+    const response = await axios.get(`${backendUrl}/drawing/${drawingId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching drawing content from backend:", error);
+    throw error;
+  }
+};
+
 export default apiClient;
