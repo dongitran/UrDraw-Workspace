@@ -6,6 +6,7 @@ class DrawingContent extends Model {
   public userId!: string;
   public title!: string | null;
   public content!: string | null;
+  public type!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -27,6 +28,11 @@ DrawingContent.init(
     content: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'excalidraw',
     },
     createdAt: {
       type: DataTypes.DATE,
