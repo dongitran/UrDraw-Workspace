@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export default function CreateDrawingModal({ isOpen, onClose, onCreate }) {
   const [drawingName, setDrawingName] = useState("");
+  const [drawingType, setDrawingType] = useState("excalidraw");
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
@@ -14,9 +15,10 @@ export default function CreateDrawingModal({ isOpen, onClose, onCreate }) {
       return;
     }
 
-    onCreate(drawingName);
+    onCreate(drawingName, drawingType);
 
     setDrawingName("");
+    setDrawingType("excalidraw");
     setError("");
   };
 
@@ -68,6 +70,24 @@ export default function CreateDrawingModal({ isOpen, onClose, onCreate }) {
               autoFocus
             />
             {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="drawingType"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Drawing Type
+            </label>
+            <select
+              id="drawingType"
+              className="input-field"
+              value={drawingType}
+              onChange={(e) => setDrawingType(e.target.value)}
+            >
+              <option value="excalidraw">Excalidraw</option>
+              <option value="mermaid">Mermaid</option>
+            </select>
           </div>
 
           <div className="flex justify-end space-x-2 mt-6">

@@ -56,7 +56,7 @@ ShareRoute.post(
     z.object({
       collectionId: z.string(),
       permission: z.enum(["view", "edit"]),
-      expiresInDays: z.string().optional(),
+      expiresInDays: z.number().optional(),
     })
   ),
   async (ctx) => {
@@ -72,7 +72,7 @@ ShareRoute.post(
     let expiresAt = null;
     if (expiresInDays) {
       expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + parseInt(expiresInDays));
+      expiresAt.setDate(expiresAt.getDate() + expiresInDays);
     }
     const share = await db
       .insert(CollectionShareTable)

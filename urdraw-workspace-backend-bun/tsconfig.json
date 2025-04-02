@@ -3,7 +3,8 @@
     // Set up path aliases
     "baseUrl": "./src",
     "paths": {
-      "@route/*": ["routes/*"]
+      "@route/*": ["routes/*"],
+      "@middlewars/*": ["middlewares/*"]
     },
     // Enable latest features
     "lib": ["ESNext", "DOM"],

@@ -1,5 +1,4 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 let isConnected = false;
 
@@ -8,21 +7,19 @@ const connectToMongoDB = async () => {
     console.log("MongoDB is already connected");
     return;
   }
-
   try {
-    if (!process.env.MONGO_URI) {
-      console.warn(
-        "MONGO_URI environment variable not set. MongoDB logging disabled."
-      );
-      return;
+    if (!Bun.env.MONGO_URI) {
+      console.warn("MONGO_URI environment variable not set. MongoDB logging disabled.");
+      process.exit();
     }
 
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(Bun.env.MONGO_URI);
     isConnected = true;
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error);
+    process.exit();
   }
 };
 
-module.exports = { connectToMongoDB, mongoose };
+export default { connectToMongoDB, mongoose };
