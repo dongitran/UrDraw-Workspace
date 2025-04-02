@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { buildUrDrawUrl } from "@/lib/config";
 import { getToken } from "@/lib/keycloak";
 import { getDrawingContentFromBackend } from "@/lib/api";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
   const router = useRouter();
@@ -43,6 +45,8 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
     }
 
     try {
+      setIsLoading(true);
+
       const token = getToken();
       if (token) {
         const drawingContent = JSON.parse(drawing.content);
@@ -58,6 +62,7 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
       }
     } catch (error) {
       console.error("Error opening drawing:", error);
+      setIsLoading(false);
     }
   };
 
@@ -130,6 +135,12 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
       className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200 relative"
       onClick={handleCardClick}
     >
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 z-50">
+          <LoadingSpinner size="medium" message="Loading..." />
+        </div>
+      )}
+
       {drawing.thumbnailUrl ? (
         <div className="h-40 bg-gray-200 relative">
           <img
