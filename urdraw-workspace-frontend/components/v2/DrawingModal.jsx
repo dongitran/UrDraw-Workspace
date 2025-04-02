@@ -11,17 +11,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createDrawing, deleteCollection, updateCollection } from "@/lib/api";
 import { generateRandomThumbnail } from "@/lib/thumbnailGenerator";
+import { LoaderCircle } from "lucide-react";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 
 const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setOpenDrawModal }) => {
   const [name, setName] = useState(drawing.name);
+  const [loading, setLoading] = useState(false);
   const onSave = async () => {
     if (!collectionId) {
       toast.warning("Mã ID của collection không được tìm thấy");
       return;
     }
     try {
+      setLoading(true);
       await createDrawing({
         name,
         collectionId,
@@ -41,6 +44,7 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
       console.log("error :>> ", error);
       toast.error("Create new drawing failed");
     } finally {
+      setLoading(false);
     }
   };
   const onEdit = async () => {
@@ -171,10 +175,16 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
                 onClick={() => {
                   if (setOpenDrawModal) setOpenDrawModal();
                 }}
+                disabled={loading}
+                className="bg-slate-700 hover:bg-slate-900 text-white"
               >
-                Close
+                {loading && <LoaderCircle className="animate-spin" />}
+                {"Đóng"}
               </Button>
-              <Button onClick={onSave}>Save</Button>
+              <Button onClick={onSave} disabled={loading} className="text-white bg-green-700 hover:bg-green-900">
+                {loading && <LoaderCircle className="animate-spin" />}
+                {"Lưu"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -199,13 +209,16 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
             </div>
             <DialogFooter>
               <Button
+                disabled={loading}
                 onClick={() => {
                   if (setOpenDrawModal) setOpenDrawModal();
                 }}
               >
                 Close
               </Button>
-              <Button onClick={onSave}>Save</Button>
+              <Button onClick={onSave} disabled={loading}>
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

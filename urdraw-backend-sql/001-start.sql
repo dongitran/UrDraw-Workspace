@@ -21,3 +21,11 @@ ALTER TABLE collections
   ADD CONSTRAINT FK_collections_TO_workspaces
   FOREIGN KEY (workspace_id)
   REFERENCES workspaces (id);
+
+alter table drawings
+add column workspace_id varchar(255) NOT NULL;
+
+ALTER TABLE drawings
+  ADD CONSTRAINT FK_drawings_TO_workspaces
+  FOREIGN KEY (workspace_id)
+  REFERENCES workspaces (id);

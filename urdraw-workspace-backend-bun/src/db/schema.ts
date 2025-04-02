@@ -36,6 +36,7 @@ export const DrawingTable = pgTable(
     content: text(),
     thumbnailUrl: text(),
     userId: varchar({ length: 255 }).notNull(),
+    workspaceId: varchar("workspace_id", { length: 255 }).notNull(),
     lastModified: timestamp({ withTimezone: true, mode: "string" }),
     collectionId: uuid(),
     createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
