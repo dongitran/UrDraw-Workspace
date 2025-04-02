@@ -80,7 +80,13 @@ export default function CollectionPage() {
         return;
       }
 
-      const url = buildUrDrawUrl(token, drawingId);
+      const drawing = drawings.find((d) => d.id === drawingId);
+      if (!drawing) {
+        showNotification("Drawing not found", "error");
+        return;
+      }
+
+      const url = buildUrDrawUrl(token, drawingId, drawing.type);
       window.open(url, "_blank");
     } catch (error) {
       console.error("Error opening drawing:", error);
@@ -88,7 +94,7 @@ export default function CollectionPage() {
     }
   };
 
-  const handleCreateDrawing = async (name) => {
+  const handleCreateDrawing = async (name, type = "excalidraw") => {
     if (isShared && permission !== "edit") {
       showNotification(
         "You don't have permission to create drawings in this collection",
@@ -103,11 +109,12 @@ export default function CollectionPage() {
         collectionId,
         thumbnailUrl: generateRandomThumbnail(name),
         content: JSON.stringify({
-          type: "excalidraw",
+          type: type,
           version: 2,
           source: "urdraw-workspace",
           elements: [],
         }),
+        type: type,
       });
 
       initializeDrawingContent(newDrawing.id, name).catch((err) =>
@@ -219,7 +226,9 @@ export default function CollectionPage() {
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">{collection.name}</h1>
+          <h1 className="text-lg md:text-2xl font-medium md:font-bold">
+            {collection.name}
+          </h1>
 
           {isShared && (
             <div className="mt-1 inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
@@ -241,8 +250,20 @@ export default function CollectionPage() {
         {(!isShared || permission === "edit") && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="btn-primary"
+            className="py-2 px-3 md:py-2 md:px-4 bg-blue-600 text-white rounded-lg text-sm md:text-base hover:bg-blue-700 flex items-center"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 mr-1 md:mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
+            </svg>
             Create Drawing
           </button>
         )}
