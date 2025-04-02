@@ -30,8 +30,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { WorkspaceApi } from "@/lib/api";
+import { get } from "lodash";
 
-const data = {
+const initData = {
   navMain: [
     {
       title: "My Workspace",
@@ -135,6 +138,13 @@ const data = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
+  const { data } = useQuery({
+    queryKey: ["/workspaces"],
+    queryFn: () => {
+      return WorkspaceApi().get();
+    },
+    enabled: !!user,
+  });
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -150,9 +160,10 @@ export function AppSidebar({ ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={get(data, "workspaces")} />
+
+        <NavDocuments items={initData.documents} />
+        <NavSecondary items={initData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser

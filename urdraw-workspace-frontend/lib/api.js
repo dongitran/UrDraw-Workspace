@@ -39,8 +39,7 @@ apiClient.interceptors.response.use(
 
     if (
       error.response?.status === 401 ||
-      (error.response?.data?.error === "invalid_grant" &&
-        !originalRequest._retry)
+      (error.response?.data?.error === "invalid_grant" && !originalRequest._retry)
     ) {
       originalRequest._retry = true;
 
@@ -87,8 +86,7 @@ export const createDrawing = async (drawingData) => {
 
 export const initializeDrawingContent = async (drawId, title) => {
   try {
-    const backendUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.urdraw.click";
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.urdraw.click";
     const token = getToken();
 
     const response = await axios.post(
@@ -150,9 +148,7 @@ export const getCollectionDetails = async (collectionId) => {
 
 export const fetchCollectionDrawings = async (collectionId) => {
   try {
-    const response = await apiClient.get(
-      `/collections/${collectionId}/drawings`
-    );
+    const response = await apiClient.get(`/collections/${collectionId}/drawings`);
     return response.data;
   } catch (error) {
     console.error("Error fetching collection drawings:", error);
@@ -169,13 +165,21 @@ export const createCollection = async (collectionData) => {
     throw error;
   }
 };
+export const WorkspaceApi = () => {
+  const post = async ({ name, description }) => {
+    const response = await apiClient.post("/workspaces", { description, name });
+    return response.data;
+  };
+  const get = async () => {
+    const res = await apiClient.get("/workspaces");
+    return res.data;
+  };
+  return { post, get };
+};
 
 export const updateCollection = async (collectionId, collectionData) => {
   try {
-    const response = await apiClient.put(
-      `/collections/${collectionId}`,
-      collectionData
-    );
+    const response = await apiClient.put(`/collections/${collectionId}`, collectionData);
     return response.data;
   } catch (error) {
     console.error("Error updating collection:", error);

@@ -7,13 +7,16 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import WorkspaceModal from "@/components/v2/Workspace/Modal";
+import { castArray, compact } from "lodash";
 import { PlusCircleIcon } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function NavMain({ items }) {
   const router = useRouter();
   const pathname = usePathname();
-
+  const [openWorkspaceModal, setOpenWorkspaceModal] = useState(false);
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -22,6 +25,9 @@ export function NavMain({ items }) {
             <SidebarMenuButton
               tooltip="Create workspace"
               className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+              onClick={() => {
+                setOpenWorkspaceModal(true);
+              }}
             >
               <PlusCircleIcon />
               <span>Create workspace</span>
@@ -29,21 +35,21 @@ export function NavMain({ items }) {
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
-          {items.map((item) => (
+          {compact(castArray(items)).map((item) => (
             <SidebarMenuItem
-              key={item.title}
+              key={item.id}
               onClick={() => {
-                router.push(item.url);
+                router.push(`/workspace-v2/${item.id}`);
               }}
             >
-              <SidebarMenuButton tooltip={item.title} isActive={pathname === item.url}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
+              <SidebarMenuButton tooltip={item.description} isActive={pathname === item.id}>
+                <span>{item.name}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarGroupContent>
+      <WorkspaceModal openWorkspaceModal={openWorkspaceModal} setOpenWorkspaceModal={setOpenWorkspaceModal} />
     </SidebarGroup>
   );
 }
