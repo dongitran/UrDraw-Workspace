@@ -8,6 +8,7 @@ import { Fragment, useState } from "react";
 import { Button } from "./ui/button";
 import CollectionModal from "./v2/CollectionModal";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 export function WorkspacePage() {
   const { id } = useParams();
   const [openCollectionModal, setOpenCollectionModal] = useState("");
@@ -16,6 +17,10 @@ export function WorkspacePage() {
     queryKey,
     queryFn: () => {
       return WorkspaceApi().detail(id);
+    },
+    throwOnError: (error) => {
+      const message = get(error, "response.data.message") || "Xảy ra lỗi trong quá trình lấy thông tin workspace";
+      toast.error(message);
     },
   });
 
