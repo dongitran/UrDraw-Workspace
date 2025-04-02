@@ -2,6 +2,7 @@ import { pgTable, uuid, varchar, timestamp, foreignKey, text, unique, pgEnum } f
 
 export const enumCollectionSharesPermission = pgEnum("enum_collection_shares_permission", ["view", "edit"]);
 export const enumCollectionSharesStatus = pgEnum("enum_collection_shares_status", ["pending", "accepted"]);
+export const enumDrawingType = pgEnum("enum_drawing_type", ["excalidraw", "mermaid"]);
 
 export const CollectionTable = pgTable("collections", {
   id: uuid().primaryKey().notNull(),
@@ -25,6 +26,7 @@ export const DrawingTable = pgTable(
     createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
     updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
     deletedAt: timestamp({ withTimezone: true, mode: "string" }),
+    type: enumDrawingType().default("excalidraw").notNull(),
   },
   (table) => [
     foreignKey({

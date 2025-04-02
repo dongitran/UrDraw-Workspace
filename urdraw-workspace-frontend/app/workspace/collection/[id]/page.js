@@ -80,7 +80,13 @@ export default function CollectionPage() {
         return;
       }
 
-      const url = buildUrDrawUrl(token, drawingId);
+      const drawing = drawings.find((d) => d.id === drawingId);
+      if (!drawing) {
+        showNotification("Drawing not found", "error");
+        return;
+      }
+
+      const url = buildUrDrawUrl(token, drawingId, drawing.type);
       window.open(url, "_blank");
     } catch (error) {
       console.error("Error opening drawing:", error);
@@ -88,7 +94,7 @@ export default function CollectionPage() {
     }
   };
 
-  const handleCreateDrawing = async (name) => {
+  const handleCreateDrawing = async (name, type = "excalidraw") => {
     if (isShared && permission !== "edit") {
       showNotification(
         "You don't have permission to create drawings in this collection",
@@ -103,11 +109,12 @@ export default function CollectionPage() {
         collectionId,
         thumbnailUrl: generateRandomThumbnail(name),
         content: JSON.stringify({
-          type: "excalidraw",
+          type: type,
           version: 2,
           source: "urdraw-workspace",
           elements: [],
         }),
+        type: type,
       });
 
       initializeDrawingContent(newDrawing.id, name).catch((err) =>
