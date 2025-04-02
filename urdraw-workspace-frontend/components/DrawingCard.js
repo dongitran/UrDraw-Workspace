@@ -44,7 +44,7 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
     try {
       const token = getToken();
       if (token) {
-        const drawingUrl = buildUrDrawUrl(token, drawing.id);
+        const drawingUrl = buildUrDrawUrl(token, drawing.id, drawing.type);
         window.location.href = drawingUrl;
       }
     } catch (error) {
@@ -80,6 +80,42 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
     });
   };
 
+  const getTypeIcon = () => {
+    if (drawing.type === "mermaid") {
+      return (
+        <div className="absolute top-2 left-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 mr-1"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Mermaid
+        </div>
+      );
+    } else {
+      return (
+        <div className="absolute top-2 left-2 bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded flex items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4 mr-1"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+          Excalidraw
+        </div>
+      );
+    }
+  };
+
   return (
     <div
       className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-200 relative"
@@ -92,10 +128,12 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
             alt={drawing.name}
             className="w-full h-full object-cover"
           />
+          {getTypeIcon()}
         </div>
       ) : (
-        <div className="h-40 bg-gray-200 flex items-center justify-center">
+        <div className="h-40 bg-gray-200 flex items-center justify-center relative">
           <span className="text-gray-400 text-lg">No thumbnail</span>
+          {getTypeIcon()}
         </div>
       )}
 
