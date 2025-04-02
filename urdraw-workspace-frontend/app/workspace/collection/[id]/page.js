@@ -17,7 +17,6 @@ import CreateDrawingModal from "@/components/CreateDrawingModal";
 import EditDrawingModal from "@/components/EditDrawingModal";
 import Notification from "@/components/Notification";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { buildUrDrawUrl } from "@/lib/config";
 
 export default function CollectionPage() {
   const { id: collectionId } = useParams();
@@ -69,28 +68,6 @@ export default function CollectionPage() {
       showNotification("Error loading collection data", "error");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleOpenDrawing = async (drawingId) => {
-    try {
-      const token = getToken();
-      if (!token) {
-        showNotification("Authentication error. Please log in again.", "error");
-        return;
-      }
-
-      const drawing = drawings.find((d) => d.id === drawingId);
-      if (!drawing) {
-        showNotification("Drawing not found", "error");
-        return;
-      }
-
-      const url = buildUrDrawUrl(token, drawingId, drawing.type);
-      window.open(url, "_blank");
-    } catch (error) {
-      console.error("Error opening drawing:", error);
-      showNotification("Error opening drawing", "error");
     }
   };
 

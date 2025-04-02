@@ -15,7 +15,7 @@ export const buildUrDrawUrl = (token, drawId, type = "excalidraw") => {
       ? process.env.NEXT_PUBLIC_MERMAID_URL
       : process.env.NEXT_PUBLIC_URDRAW_URL;
 
-  return `${baseUrl}/?token=${encodeURIComponent(token)}${
+  return `${baseUrl}?token=${encodeURIComponent(token)}${
     drawId ? `&drawId=${encodeURIComponent(drawId)}` : ""
   }`;
 };

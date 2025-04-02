@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { buildUrDrawUrl } from "@/lib/config";
 import { getToken } from "@/lib/keycloak";
+import { getDrawingContentFromBackend } from "@/lib/api";
 
 export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,8 +45,16 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
     try {
       const token = getToken();
       if (token) {
-        const drawingUrl = buildUrDrawUrl(token, drawing.id, drawing.type);
-        window.location.href = drawingUrl;
+        const drawingContent = JSON.parse(drawing.content);
+        if (drawingContent?.type === "mermaid") {
+          const data = await getDrawingContentFromBackend(drawing.id);
+
+          const drawingUrl = buildUrDrawUrl(token, drawing.id, drawing?.type);
+          window.location.href = drawingUrl + "#" + data.content;
+        } else {
+          const drawingUrl = buildUrDrawUrl(token, drawing.id, drawing?.type);
+          window.location.href = drawingUrl;
+        }
       }
     } catch (error) {
       console.error("Error opening drawing:", error);
