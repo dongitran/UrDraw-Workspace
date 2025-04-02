@@ -1,6 +1,5 @@
 import axios from "axios";
 import { getToken, updateToken, logout } from "./keycloak";
-import { generateRandomThumbnail } from "./thumbnailGenerator";
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -85,11 +84,7 @@ export const createDrawing = async (drawingData) => {
   }
 };
 
-export const initializeDrawingContent = async (
-  drawId,
-  title,
-  type = "excalidraw"
-) => {
+export const initializeDrawingContent = async (drawId, title, type) => {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const token = getToken();
