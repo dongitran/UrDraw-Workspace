@@ -5,6 +5,7 @@ export interface IDrawingContentUpdateLogs extends Document {
   userId: string;
   content: string;
   title?: string;
+  type?: string;
   createdAt: Date;
 }
 
@@ -13,6 +14,7 @@ const DrawingContentUpdateLogsSchema: Schema = new Schema({
   userId: { type: String, required: true, index: true },
   content: { type: String, required: true },
   title: { type: String },
+  type: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 
