@@ -13,11 +13,15 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createCollection, deleteCollection, updateCollection } from "@/lib/api";
 
-const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpenCollectionModal }) => {
-  const [name, setName] = useState(collection.name);
+const CollectionModal = ({ workspace = {}, refetch, openCollectionModal, setOpenCollectionModal }) => {
+  const [name, setName] = useState(workspace.name);
   const onSave = async () => {
+    if (!workspace.id) {
+      toast.warning("Mã ID của collection không được tìm thấy");
+      return;
+    }
     try {
-      await createCollection({ name });
+      await createCollection({ workspaceId: workspace.id, name });
       setOpenCollectionModal(null);
       setName("");
       if (refetch) refetch();
@@ -29,12 +33,12 @@ const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpe
     }
   };
   const onEdit = async () => {
-    if (!collection.id) {
+    if (!workspace.id) {
       toast.warning("Mã ID của collection không được tìm thấy");
       return;
     }
     try {
-      await updateCollection(collection.id, {
+      await updateCollection(workspace.id, {
         name,
       });
       setOpenCollectionModal(null);
@@ -47,12 +51,12 @@ const CollectionModal = ({ collection = {}, refetch, openCollectionModal, setOpe
     }
   };
   const onDelete = async () => {
-    if (!collection.id) {
+    if (!workspace.id) {
       toast.warning("Mã ID của collection không được tìm thấy");
       return;
     }
     try {
-      await deleteCollection(collection.id);
+      await deleteCollection(workspace.id);
       setOpenCollectionModal(null);
       if (refetch) refetch();
       toast.success("Delete collection name successfully");

@@ -10,12 +10,12 @@ import {
 import WorkspaceModal from "@/components/v2/Workspace/Modal";
 import { castArray, compact } from "lodash";
 import { PlusCircleIcon } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function NavMain({ items }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const { id } = useParams();
   const [openWorkspaceModal, setOpenWorkspaceModal] = useState(false);
   return (
     <SidebarGroup>
@@ -42,7 +42,7 @@ export function NavMain({ items }) {
                 router.push(`/workspace-v2/${item.id}`);
               }}
             >
-              <SidebarMenuButton tooltip={item.description} isActive={pathname === item.id}>
+              <SidebarMenuButton tooltip={item.description} isActive={id === item.id}>
                 <span>{item.name}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

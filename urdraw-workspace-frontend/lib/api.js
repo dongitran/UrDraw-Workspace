@@ -174,7 +174,11 @@ export const WorkspaceApi = () => {
     const res = await apiClient.get("/workspaces");
     return res.data;
   };
-  return { post, get };
+  const detail = async (id) => {
+    const res = await apiClient.get(`/workspaces/${id}`);
+    return res.data;
+  };
+  return { post, get, detail };
 };
 
 export const updateCollection = async (collectionId, collectionData) => {

@@ -13,3 +13,11 @@ CREATE TABLE workspaces
     deleted_by  varchar(255),
     PRIMARY KEY (id)
 );
+
+alter table collections
+add column workspace_id varchar(255) NOT NULL;
+
+ALTER TABLE collections
+  ADD CONSTRAINT FK_collections_TO_workspaces
+  FOREIGN KEY (workspace_id)
+  REFERENCES workspaces (id);

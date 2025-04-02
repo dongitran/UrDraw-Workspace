@@ -138,7 +138,7 @@ const initData = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
-  const { data } = useQuery({
+  const { data: workspaces } = useQuery({
     queryKey: ["/workspaces"],
     queryFn: () => {
       return WorkspaceApi().get();
@@ -160,7 +160,7 @@ export function AppSidebar({ ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={get(data, "workspaces")} />
+        <NavMain items={workspaces} />
 
         <NavDocuments items={initData.documents} />
         <NavSecondary items={initData.navSecondary} className="mt-auto" />

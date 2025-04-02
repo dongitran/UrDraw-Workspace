@@ -22,6 +22,7 @@ export const CollectionTable = pgTable("collections", {
   id: uuid().primaryKey().notNull(),
   name: varchar({ length: 255 }).notNull(),
   userId: varchar({ length: 255 }).notNull(),
+  workspaceId: varchar("workspace_id", { length: 255 }).notNull(),
   createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
   deletedAt: timestamp({ withTimezone: true, mode: "string" }),

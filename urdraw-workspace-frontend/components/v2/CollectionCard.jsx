@@ -47,7 +47,7 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
               </CardTitle>
               <div className="absolute right-4 top-4">
                 <Badge variant="" className="flex gap-1 rounded-lg text-xs">
-                  {collection.drawingCount}
+                  {collection.drawingCount || 0}
                 </Badge>
               </div>
             </CardHeader>
@@ -112,7 +112,7 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
         }}
         openCollectionModal={openCollectionModal}
         setOpenCollectionModal={setOpenCollectionModal}
-        collection={collection}
+        workspace={collection}
       />
     </Fragment>
   );
