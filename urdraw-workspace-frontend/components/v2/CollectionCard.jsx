@@ -72,7 +72,7 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
               <Trash2 className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset>
+          <ContextMenuItem inset onClick={() => handleClickMenu("share")}>
             Share
             <ContextMenuShortcut>
               <Share2 className="h-4 w-4" />

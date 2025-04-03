@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createCollection, deleteCollection, updateCollection } from "@/lib/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const CollectionModal = ({ workspace = {}, refetch, openCollectionModal, setOpenCollectionModal }) => {
   const [name, setName] = useState(workspace.name);
@@ -65,7 +67,78 @@ const CollectionModal = ({ workspace = {}, refetch, openCollectionModal, setOpen
       toast.error("Delete collection name failed");
     }
   };
-  if (openCollectionModal === "delete") {
+  if (openCollectionModal === "share") {
+    return (
+      <Fragment>
+        <Dialog open={!!openCollectionModal}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Share collection</DialogTitle>
+            </DialogHeader>
+
+            <Tabs defaultValue="create" className="">
+              <TabsList className="w-full">
+                <TabsTrigger value="create" className="w-1/2">
+                  Create Invite
+                </TabsTrigger>
+                <TabsTrigger value="manage" className="w-1/2">
+                  Manage
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="create">
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-1 items-center gap-4">
+                    <Label htmlFor="name" className="">
+                      Permission
+                    </Label>
+                    <Select onValueChange={(e) => console.log("e :>> ", e)}>
+                      <SelectTrigger id="name" className="">
+                        <SelectValue placeholder="Select permission" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="view">View</SelectItem>
+                        <SelectItem value="edit">Edit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-1 items-center gap-4">
+                    <Label htmlFor="expired_in" className="">
+                      Expires in
+                    </Label>
+                    <Select>
+                      <SelectTrigger id="expired_in" className="">
+                        <SelectValue placeholder="Select permission" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1-day">1 Day</SelectItem>
+                        <SelectItem value="7-day">7 Day</SelectItem>
+                        <SelectItem value="30-day">30 Day</SelectItem>
+                        <SelectItem value="never">Never</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="manage">Change your password here.</TabsContent>
+            </Tabs>
+
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  if (setOpenCollectionModal) setOpenCollectionModal();
+                }}
+              >
+                Close
+              </Button>
+              <Button onClick={onDelete} variant="destructive">
+                Create
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Fragment>
+    );
+  } else if (openCollectionModal === "delete") {
     return (
       <Fragment>
         <Dialog open={!!openCollectionModal}>

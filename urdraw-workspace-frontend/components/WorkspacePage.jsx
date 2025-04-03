@@ -1,16 +1,17 @@
 "use client";
 import { ComboboxDemo } from "@/components/Combobox";
 import CollectionCard from "@/components/v2/CollectionCard";
-import { fetchUserCollections, WorkspaceApi } from "@/lib/api";
+import { WorkspaceApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { castArray, compact, get } from "lodash";
 import { Fragment, useState } from "react";
 import { Button } from "./ui/button";
 import CollectionModal from "./v2/CollectionModal";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 export function WorkspacePage() {
   const { id } = useParams();
+  const router = useRouter();
   const [openCollectionModal, setOpenCollectionModal] = useState("");
   const queryKey = ["/workspaces/" + id];
   const { data, refetch } = useQuery({
@@ -21,6 +22,7 @@ export function WorkspacePage() {
     throwOnError: (error) => {
       const message = get(error, "response.data.message") || "Xảy ra lỗi trong quá trình lấy thông tin workspace";
       toast.error(message);
+      router.push("/workspace-v2");
     },
   });
 
