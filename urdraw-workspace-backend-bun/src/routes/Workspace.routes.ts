@@ -127,7 +127,6 @@ WorkspaceRoute.delete(
       },
     });
     if (!workspace) return ctx.json({ message: "Workspace not found" }, 404);
-    console.log("workspace :>> ", workspace);
     const drawingIds: string[] = [],
       collectionIds: string[] = [];
     for (const collection of workspace.collections) {
