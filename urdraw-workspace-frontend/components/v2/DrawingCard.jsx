@@ -1,6 +1,5 @@
 const { Fragment, useState } = require("react");
-import { Badge } from "@/components/ui/badge";
-import { Card, CardDescription, CardFooter, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -16,17 +15,26 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import DrawingModal from "@/components/v2/DrawingModal";
+import { buildUrDrawUrl } from "@/lib/config";
+import { getToken } from "@/lib/keycloak";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { Pen, Share2, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import DrawingModal from "@/components/v2/DrawingModal";
 
 const DrawingCard = ({ queryKey, drawing = {} }) => {
-  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [openCollectionModal, setOpenCollectionModal] = useState("");
+  const handleDrawingClick = async () => {
+    try {
+      const token = getToken();
+      if (token) {
+        const drawingUrl = buildUrDrawUrl(token, drawing.id, drawing.type);
+        window.location.href = drawingUrl;
+      }
+    } catch (error) {}
+  };
   const handleClickMenu = async (type) => {
     setOpenCollectionModal(type);
   };
@@ -41,9 +49,7 @@ const DrawingCard = ({ queryKey, drawing = {} }) => {
               backgroundPosition: "center",
             }}
             className="@container/card rounded-sm shadow-lg hover:shadow-slate-700"
-            onDoubleClick={() => {
-              router.push(`/workspace-v2/collection/${drawing.id}`);
-            }}
+            onDoubleClick={handleDrawingClick}
           >
             <CardHeader className="relative">
               <CardTitle className="@[250px]/card:text-3xl text-2xl font-semibold tabular-nums">
