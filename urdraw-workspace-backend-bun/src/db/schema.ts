@@ -1,12 +1,28 @@
-import { pgTable, uuid, varchar, timestamp, foreignKey, text, unique, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, timestamp, foreignKey, text, unique, pgEnum, jsonb } from "drizzle-orm/pg-core";
 
 export const enumCollectionSharesPermission = pgEnum("enum_collection_shares_permission", ["view", "edit"]);
 export const enumCollectionSharesStatus = pgEnum("enum_collection_shares_status", ["pending", "accepted"]);
-
+const commonTable = {
+  id: varchar({ length: 255 }).primaryKey().unique().notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  params: jsonb(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull(),
+  createdBy: varchar("created_by", { length: 255 }),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
+  updatedBy: varchar("updated_by", { length: 255 }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
+  deletedBy: varchar("deleted_by", { length: 255 }),
+};
+export const WorkspaceTable = pgTable("workspaces", {
+  name: varchar({ length: 255 }).notNull(),
+  description: text(),
+  ...commonTable,
+});
 export const CollectionTable = pgTable("collections", {
   id: uuid().primaryKey().notNull(),
   name: varchar({ length: 255 }).notNull(),
   userId: varchar({ length: 255 }).notNull(),
+  workspaceId: varchar("workspace_id", { length: 255 }).notNull(),
   createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
   updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
   deletedAt: timestamp({ withTimezone: true, mode: "string" }),
@@ -20,6 +36,7 @@ export const DrawingTable = pgTable(
     content: text(),
     thumbnailUrl: text(),
     userId: varchar({ length: 255 }).notNull(),
+    workspaceId: varchar("workspace_id", { length: 255 }).notNull(),
     lastModified: timestamp({ withTimezone: true, mode: "string" }),
     collectionId: uuid(),
     createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),

@@ -47,12 +47,8 @@ export default function LoginPage() {
               />
             </div>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Login to Workspace
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Access your drawings
-          </p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Login to Workspace</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">Access your drawings</p>
         </div>
 
         <div className="mt-8">
@@ -63,8 +59,7 @@ export default function LoginPage() {
           ) : (
             <div className="card">
               <p className="text-center mb-4">
-                The system uses Keycloak for authentication. You will be
-                redirected to the login page to continue.
+                The system uses Keycloak for authentication. You will be redirected to the login page to continue.
               </p>
               <div>
                 <button

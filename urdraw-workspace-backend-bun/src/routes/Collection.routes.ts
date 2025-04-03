@@ -13,8 +13,7 @@ CollectionRoute.use(VerifyToken());
 CollectionRoute.get("/", async (ctx) => {
   const user = ctx.get("user");
   const collections = await db.query.CollectionTable.findMany({
-    where: (coll, { eq, and, isNull }) =>
-      and(eq(coll.userId, user.id), isNull(coll.deletedAt)),
+    where: (coll, { eq, and, isNull }) => and(eq(coll.userId, user.id), isNull(coll.deletedAt)),
     with: {
       drawings: {
         where: (drawing, { isNull }) => isNull(drawing.deletedAt),
@@ -33,18 +32,13 @@ CollectionRoute.get("/", async (ctx) => {
   .get("/all/data", async (ctx) => {
     const user = ctx.get("user");
     const collections = await db.query.CollectionTable.findMany({
-      where: (coll, { eq, and, isNull }) =>
-        and(eq(coll.userId, user.id), isNull(coll.deletedAt)),
+      where: (coll, { eq, and, isNull }) => and(eq(coll.userId, user.id), isNull(coll.deletedAt)),
       orderBy: (coll, { desc }) => desc(coll.createdAt),
       columns: { id: true, name: true, createdAt: true, updatedAt: true },
     });
     const sharedCollections = await db.query.CollectionShareTable.findMany({
       where: (coll, { eq, and, isNull }) =>
-        and(
-          eq(coll.sharedWithId, user.id),
-          eq(coll.status, "accepted"),
-          isNull(coll.deletedAt)
-        ),
+        and(eq(coll.sharedWithId, user.id), eq(coll.status, "accepted"), isNull(coll.deletedAt)),
       with: {
         collection: {
           where: (coll, { isNull }) => isNull(coll.deletedAt),
@@ -52,8 +46,7 @@ CollectionRoute.get("/", async (ctx) => {
       },
     });
     const drawings = await db.query.DrawingTable.findMany({
-      where: (column, { eq, and, isNull }) =>
-        and(eq(column.userId, user.id), isNull(column.deletedAt)),
+      where: (column, { eq, and, isNull }) => and(eq(column.userId, user.id), isNull(column.deletedAt)),
       columns: {
         id: true,
         name: true,
@@ -85,8 +78,7 @@ CollectionRoute.get("/", async (ctx) => {
     const user = ctx.get("user");
     const id = ctx.req.param("id");
     let collection = await db.query.CollectionTable.findFirst({
-      where: (column, { eq, and, isNull }) =>
-        and(eq(column.id, id), isNull(column.deletedAt)),
+      where: (column, { eq, and, isNull }) => and(eq(column.id, id), isNull(column.deletedAt)),
       with: {
         drawings: {
           where: (drawing, { isNull }) => isNull(drawing.deletedAt),
@@ -134,11 +126,7 @@ CollectionRoute.get("/", async (ctx) => {
     const user = ctx.get("user");
     let collection = await db.query.CollectionTable.findFirst({
       where: (clm, { eq, and, isNull }) =>
-        and(
-          eq(clm.id, collectionId),
-          eq(clm.userId, user.id),
-          isNull(clm.deletedAt)
-        ),
+        and(eq(clm.id, collectionId), eq(clm.userId, user.id), isNull(clm.deletedAt)),
     });
     let isShared = false;
     let sharePermission = null;
@@ -168,8 +156,7 @@ CollectionRoute.get("/", async (ctx) => {
       return ctx.json({ message: "Collection not found" }, 404);
     }
     const drawings = await db.query.DrawingTable.findMany({
-      where: (clm, { eq, and, isNull }) =>
-        and(eq(clm.collectionId, collectionId), isNull(clm.deletedAt)),
+      where: (clm, { eq, and, isNull }) => and(eq(clm.collectionId, collectionId), isNull(clm.deletedAt)),
       orderBy: (clm, { desc }) => desc(clm.lastModified),
     });
     const response = {
@@ -186,15 +173,17 @@ CollectionRoute.post(
     "json",
     z.object({
       name: z.string().min(3, "Ít nhất phải 3 ký tự"),
+      workspaceId: z.string().ulid(),
     })
   ),
   async (ctx) => {
     const user = ctx.get("user");
-    const { name } = ctx.req.valid("json");
+    const { name, workspaceId } = ctx.req.valid("json");
     const collections = await db
       .insert(CollectionTable)
       .values({
         userId: user.id,
+        workspaceId,
         name,
         id: Bun.randomUUIDv7(),
         createdAt: dayjs().toISOString(),
@@ -218,8 +207,7 @@ CollectionRoute.put(
       id = ctx.req.param("id");
     const { name } = ctx.req.valid("json");
     const collection = await db.query.CollectionTable.findFirst({
-      where: (clm, { eq, and, isNull }) =>
-        and(eq(clm.id, id), eq(clm.userId, user.id), isNull(clm.deletedAt)),
+      where: (clm, { eq, and, isNull }) => and(eq(clm.id, id), eq(clm.userId, user.id), isNull(clm.deletedAt)),
     });
     if (!collection) return ctx.json({ message: "Collection not found" }, 404);
     const newCollection = await db
@@ -235,8 +223,7 @@ CollectionRoute.delete("/:id", async (ctx) => {
   const id = ctx.req.param("id");
   const user = ctx.get("user");
   const collection = await db.query.CollectionTable.findFirst({
-    where: (clm, { eq, and, isNull }) =>
-      and(eq(clm.id, id), eq(clm.userId, user.id), isNull(clm.deletedAt)),
+    where: (clm, { eq, and, isNull }) => and(eq(clm.id, id), eq(clm.userId, user.id), isNull(clm.deletedAt)),
   });
   if (!collection) return ctx.json({ message: "Collection not found" }, 404);
 
