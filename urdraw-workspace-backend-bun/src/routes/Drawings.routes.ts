@@ -65,6 +65,7 @@ DrawingRoutes.post(
         createdAt: dayjs().toISOString(),
         id: Bun.randomUUIDv7(),
         name,
+        workspaceId: collection.workspaceId,
         updatedAt: dayjs().toISOString(),
         userId: user.id,
         collectionId: collection.id,
