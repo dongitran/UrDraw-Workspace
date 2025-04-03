@@ -42,7 +42,7 @@ export function NavMain({ items }) {
         </SidebarMenu>
         <SidebarMenu>
           {compact(castArray(items)).map((item) => {
-            return <MySidebarMenuItem item={item} />;
+            return <MySidebarMenuItem item={item} key={item.id} />;
           })}
         </SidebarMenu>
       </SidebarGroupContent>
