@@ -18,6 +18,8 @@ export const WorkspaceTable = pgTable("workspaces", {
   description: text(),
   ...commonTable,
 });
+export const enumDrawingType = pgEnum("enum_drawing_type", ["excalidraw", "mermaid"]);
+
 export const CollectionTable = pgTable("collections", {
   id: uuid().primaryKey().notNull(),
   name: varchar({ length: 255 }).notNull(),
@@ -42,6 +44,7 @@ export const DrawingTable = pgTable(
     createdAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
     updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull(),
     deletedAt: timestamp({ withTimezone: true, mode: "string" }),
+    type: enumDrawingType().default("excalidraw").notNull(),
   },
   (table) => [
     foreignKey({

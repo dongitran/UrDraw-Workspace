@@ -22,10 +22,17 @@ DrawingRoutes.get("/:id", async (ctx) => {
   if (!isOwner) {
     const share = await db.query.CollectionShareTable.findFirst({
       where: (clm, { eq, and }) =>
-        and(eq(clm.collectionId, drawing.collectionId!), eq(clm.sharedWithId, user.id), eq(clm.status, "accepted")),
+        and(
+          eq(clm.collectionId, drawing.collectionId!),
+          eq(clm.sharedWithId, user.id),
+          eq(clm.status, "accepted")
+        ),
     });
     if (!share) {
-      return ctx.json({ message: "You don't have permission to access this drawing" }, 403);
+      return ctx.json(
+        { message: "You don't have permission to access this drawing" },
+        403
+      );
     }
   }
   return ctx.json(drawing);
@@ -40,13 +47,16 @@ DrawingRoutes.post(
       collectionId: z.string().uuid(),
       thumbnailUrl: z.string(),
       content: z.string(),
+      type: z.enum(["excalidraw", "mermaid"]).default("excalidraw"),
     })
   ),
   async (ctx) => {
     const user = ctx.get("user");
-    const { collectionId, content, name, thumbnailUrl } = ctx.req.valid("json");
+    const { collectionId, content, name, thumbnailUrl, type } =
+      ctx.req.valid("json");
     const collection = await db.query.CollectionTable.findFirst({
-      where: (clm, { and, eq }) => and(eq(clm.userId, user.id), eq(clm.id, collectionId)),
+      where: (clm, { and, eq }) =>
+        and(eq(clm.userId, user.id), eq(clm.id, collectionId)),
     });
     if (!collection) return ctx.json({ message: "Collection not found" }, 404);
     const draw = await db
@@ -62,6 +72,7 @@ DrawingRoutes.post(
         content,
         thumbnailUrl,
         lastModified: dayjs().toISOString(),
+        type: type || "excalidraw",
       })
       .returning()
       .then((res) => res[0]);
@@ -78,12 +89,14 @@ DrawingRoutes.put(
       collectionId: z.string().uuid().optional(),
       thumbnailUrl: z.string().optional(),
       content: z.string().optional(),
+      type: z.enum(["excalidraw", "mermaid"]).optional(),
     })
   ),
   async (ctx) => {
     const user = ctx.get("user");
     const id = ctx.req.param("id");
-    const { name, collectionId, content, thumbnailUrl } = ctx.req.valid("json");
+    const { name, collectionId, content, thumbnailUrl, type } =
+      ctx.req.valid("json");
     const drawing = await db.query.DrawingTable.findFirst({
       where: (clm, { eq }) => eq(clm.id, id),
       with: { collection: true },
@@ -106,15 +119,23 @@ DrawingRoutes.put(
           );
         },
       });
-      if (!share) return ctx.json({ message: "You don't have permission to edit this drawing" }, 403);
+      if (!share)
+        return ctx.json(
+          { message: "You don't have permission to edit this drawing" },
+          403
+        );
     }
 
     if (collectionId && collectionId !== drawing.collectionId) {
       if (!isOwner) {
-        return ctx.json({ message: "Only the owner can move drawings between collections" }, 403);
+        return ctx.json(
+          { message: "Only the owner can move drawings between collections" },
+          403
+        );
       }
       const targetCollection = await db.query.CollectionTable.findFirst({
-        where: (clm, { and, eq }) => and(eq(clm.id, collectionId), eq(clm.userId, user.id)),
+        where: (clm, { and, eq }) =>
+          and(eq(clm.id, collectionId), eq(clm.userId, user.id)),
       });
       if (targetCollection) {
         return ctx.json({ message: "Target collection not found" }, 404);
@@ -127,6 +148,7 @@ DrawingRoutes.put(
       lastModified: dayjs().toISOString(),
       thumbnailUrl,
       content,
+      type,
     };
     const newDrawing = await db
       .update(DrawingTable)

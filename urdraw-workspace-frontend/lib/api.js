@@ -84,14 +84,18 @@ export const createDrawing = async (drawingData) => {
   }
 };
 
-export const initializeDrawingContent = async (drawId, title) => {
+export const initializeDrawingContent = async (
+  drawId,
+  title,
+  type = "excalidraw"
+) => {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "https://api.urdraw.click";
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const token = getToken();
 
     const response = await axios.post(
       `${backendUrl}/drawing`,
-      { drawId, title },
+      { drawId, title, type },
       {
         headers: {
           Authorization: `Bearer ${token}`,
