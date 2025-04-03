@@ -5,6 +5,7 @@ import db from "db/db";
 import { CollectionTable, DrawingTable, WorkspaceTable } from "db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
+import { keyBy } from "lodash";
 import { ulid } from "ulid";
 import { z } from "zod";
 
@@ -31,7 +32,9 @@ WorkspaceRoute.get("/", async (ctx) => {
       where: (clm, { eq, and }) => and(eq(clm.userId, user.id), eq(clm.id, id)),
       with: {
         collections: {
-          with: { drawings: true },
+          with: {
+            drawings: true,
+          },
           orderBy: (clm, { desc }) => desc(clm.id),
           where: (clm, { isNull }) => isNull(clm.deletedAt),
         },
@@ -39,10 +42,24 @@ WorkspaceRoute.get("/", async (ctx) => {
     });
     if (!workspace) return ctx.json({ message: "Workspace not found" }, 404);
     const collections: any[] = workspace.collections;
+    const shares = await db.query.CollectionShareTable.findMany({
+      where: (clm, { isNull, eq, and, inArray }) => {
+        return and(
+          isNull(clm.deletedAt),
+          inArray(
+            clm.collectionId,
+            collections.map((item) => item.id)
+          )
+        );
+      },
+    });
+    const keyCollectionIdByShare = keyBy(shares, "collectionId");
     return ctx.json({
       id: workspace.id,
       collections: collections.map((item) => {
         item.drawingCount = item.drawings.length;
+        item.inviteCode = keyCollectionIdByShare[item.id]?.inviteCode || null;
+        item.expiresAt = keyCollectionIdByShare[item.id]?.expiresAt || null;
         delete item.drawings;
         return item;
       }),
