@@ -17,7 +17,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            *🚀 UrDraw - Workspace Backend * 🏃‍♂️${{ github.run_number }}
+            *🚀 UrDraw - Workspace Backend Bun * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
             *📝 Commit message:* ${{ github.event.head_commit.message }}
@@ -82,7 +82,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            *❌ UrDraw - Workspace Backend * 🏃‍♂️${{ github.run_number }}
+            *❌ UrDraw - Workspace Backend Bun * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
             *📝 Commit message:* ${{ github.event.head_commit.message }}
@@ -105,7 +105,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            *🎉 UrDraw - Workspace Backend * 🏃‍♂️${{ github.run_number }}
+            *🎉 UrDraw - Workspace Backend Bun * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
             *📝 Commit message:* ${{ github.event.head_commit.message }}
@@ -128,7 +128,7 @@ jobs:
           format: markdown
           disable_web_page_preview: true
           message: |
-            *❌ UrDraw - Workspace Backend * 🏃‍♂️${{ github.run_number }}
+            *❌ UrDraw - Workspace Backend Bun * 🏃‍♂️${{ github.run_number }}
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
             *📝 Commit message:* ${{ github.event.head_commit.message }}
