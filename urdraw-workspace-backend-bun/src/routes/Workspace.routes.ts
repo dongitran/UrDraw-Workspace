@@ -58,8 +58,11 @@ WorkspaceRoute.get("/", async (ctx) => {
       id: workspace.id,
       collections: collections.map((item) => {
         item.drawingCount = item.drawings.length;
-        item.inviteCode = keyCollectionIdByShare[item.id]?.inviteCode || null;
-        item.expiresAt = keyCollectionIdByShare[item.id]?.expiresAt || null;
+        const share = keyCollectionIdByShare[item.id];
+        if (share && share.expiresAt && dayjs(share.expiresAt).isAfter(dayjs())) {
+          item.inviteCode = share.inviteCode || null;
+          item.expiresAt = share.expiresAt || null;
+        }
         delete item.drawings;
         return item;
       }),

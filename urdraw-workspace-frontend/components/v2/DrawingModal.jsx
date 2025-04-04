@@ -14,9 +14,11 @@ import { generateRandomThumbnail } from "@/lib/thumbnailGenerator";
 import { LoaderCircle } from "lucide-react";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setOpenDrawModal }) => {
   const [name, setName] = useState(drawing.name);
+  const [type, setType] = useState(drawing.type);
   const [loading, setLoading] = useState(false);
   const onSave = async () => {
     if (!collectionId) {
@@ -28,6 +30,7 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
       await createDrawing({
         name,
         collectionId,
+        type,
         thumbnailUrl: generateRandomThumbnail(name),
         content: JSON.stringify({
           type: "excalidraw",
@@ -168,6 +171,20 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
                   className="col-span-3"
                   placeholder="Enter drawing name"
                 />
+              </div>
+              <div className="grid grid-cols-1 items-center gap-4">
+                <Label htmlFor="type" className="">
+                  Type
+                </Label>
+                <Select onValueChange={(e) => setType(e)}>
+                  <SelectTrigger id="type" className="">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="excalidraw">Excalidraw</SelectItem>
+                    <SelectItem value="mermaid">Mermaid</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>

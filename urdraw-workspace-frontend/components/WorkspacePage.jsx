@@ -31,13 +31,7 @@ export function WorkspacePage() {
       <div className="flex gap-3 ">
         <ComboboxDemo />
         <div className="ml-auto"></div>
-        <Button
-          onClick={() => {
-            setOpenCollectionModal("join");
-          }}
-        >
-          Join Collection
-        </Button>
+
         <Button
           onClick={() => {
             setOpenCollectionModal("create");

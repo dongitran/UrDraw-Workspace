@@ -35,71 +35,6 @@ import { WorkspaceApi } from "@/lib/api";
 import { get } from "lodash";
 
 const initData = {
-  navMain: [
-    {
-      title: "My Workspace",
-      url: "/workspace-v2/1",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "My Workspace 2",
-      url: "/workspace-v2/2",
-      icon: ListIcon,
-    },
-    {
-      title: "My UrBox Workspace",
-      url: "/workspace-v2/3",
-      icon: BarChartIcon,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: CameraIcon,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: FileTextIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: FileCodeIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
   navSecondary: [
     {
       title: "Settings",
@@ -151,7 +86,7 @@ export function AppSidebar({ ...props }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
+              <a href="/workspace-v2">
                 <Lightbulb className="h-5 w-5" />
                 <span className="text-base font-semibold">Ur Draw</span>
               </a>
