@@ -9,16 +9,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createDrawing, deleteCollection, deleteDrawing, updateCollection, updateDrawing } from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { createDrawing, deleteDrawing, updateDrawing } from "@/lib/api";
 import { generateRandomThumbnail } from "@/lib/thumbnailGenerator";
 import { LoaderCircle } from "lucide-react";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setOpenDrawModal }) => {
-  const [name, setName] = useState(drawing.name);
-  const [type, setType] = useState(drawing.type);
+  const [name, setName] = useState();
+  const [type, setType] = useState();
   const [loading, setLoading] = useState(false);
   const onSave = async () => {
     if (!collectionId) {
@@ -89,6 +89,10 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
       setLoading(false);
     }
   };
+  useEffect(() => {
+    setName(drawing.name);
+    setType(drawing.type);
+  }, [drawing]);
   if (openDrawModal === "delete") {
     return (
       <Fragment>

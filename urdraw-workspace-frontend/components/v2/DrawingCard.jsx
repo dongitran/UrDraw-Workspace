@@ -77,38 +77,6 @@ const DrawingCard = ({ queryKey, drawing = {} }) => {
               <Trash2 className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset className="cursor-pointer">
-            Share
-            <ContextMenuShortcut>
-              <Share2 className="h-4 w-4" />
-            </ContextMenuShortcut>
-          </ContextMenuItem>
-          <ContextMenuSub>
-            <ContextMenuSubTrigger inset>More Tools</ContextMenuSubTrigger>
-            <ContextMenuSubContent className="w-48">
-              <ContextMenuItem>
-                Save Page As...
-                <ContextMenuShortcut>⇧⌘S</ContextMenuShortcut>
-              </ContextMenuItem>
-              <ContextMenuItem>Create Shortcut...</ContextMenuItem>
-              <ContextMenuItem>Name Window...</ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem>Developer Tools</ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
-          <ContextMenuSeparator />
-          <ContextMenuCheckboxItem checked>
-            Show Bookmarks Bar
-            <ContextMenuShortcut>⌘⇧B</ContextMenuShortcut>
-          </ContextMenuCheckboxItem>
-          <ContextMenuCheckboxItem>Show Full URLs</ContextMenuCheckboxItem>
-          <ContextMenuSeparator />
-          <ContextMenuRadioGroup value="pedro">
-            <ContextMenuLabel inset>People</ContextMenuLabel>
-            <ContextMenuSeparator />
-            <ContextMenuRadioItem value="pedro">Pedro Duarte</ContextMenuRadioItem>
-            <ContextMenuRadioItem value="colm">Colm Tuite</ContextMenuRadioItem>
-          </ContextMenuRadioGroup>
         </ContextMenuContent>
       </ContextMenu>
       <DrawingModal
