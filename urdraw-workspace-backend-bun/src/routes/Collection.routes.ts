@@ -173,7 +173,7 @@ CollectionRoute.post(
     "json",
     z.object({
       name: z.string().min(3, "Ít nhất phải 3 ký tự"),
-      workspaceId: z.string().ulid(),
+      workspaceId: z.string().ulid().optional(),
     })
   ),
   async (ctx) => {
