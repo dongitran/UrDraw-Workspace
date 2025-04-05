@@ -84,11 +84,7 @@ export const createDrawing = async (drawingData) => {
   }
 };
 
-export const initializeDrawingContent = async (
-  drawId,
-  title,
-  type = "excalidraw"
-) => {
+export const initializeDrawingContent = async (drawId, title, type = "excalidraw") => {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const token = getToken();
@@ -213,7 +209,13 @@ export const deleteCollection = async (collectionId) => {
     throw error;
   }
 };
-
+export const CollectionShareApi = (path = "/shares") => {
+  const invite = async (data) => {
+    const res = await apiClient.post(`${path}/invite`, data);
+    return res.data;
+  };
+  return { invite };
+};
 export const createCollectionInvite = async (data) => {
   try {
     const response = await apiClient.post("/shares/invite", data);

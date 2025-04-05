@@ -112,7 +112,7 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
         }}
         openCollectionModal={openCollectionModal}
         setOpenCollectionModal={setOpenCollectionModal}
-        workspace={collection}
+        collection={collection}
       />
     </Fragment>
   );

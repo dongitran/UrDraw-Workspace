@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getCookie } from "@/helpers";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +36,7 @@ export default function WorkspaceLayout({ children }) {
   return (
     <Fragment>
       <QueryClientProvider client={queryClient}>
-        <SidebarProvider>
+        <SidebarProvider defaultOpen={getCookie("sidebar_state") === "true" ? true : false}>
           <AppSidebar variant="inset" />
           <SidebarInset>
             <SiteHeader />
