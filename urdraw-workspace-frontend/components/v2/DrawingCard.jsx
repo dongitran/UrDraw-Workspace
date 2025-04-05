@@ -65,19 +65,19 @@ const DrawingCard = ({ queryKey, drawing = {} }) => {
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-64">
-          <ContextMenuItem inset onClick={() => handleClickMenu("edit")}>
+          <ContextMenuItem inset className="cursor-pointer" onClick={() => handleClickMenu("edit")}>
             Edit Name
             <ContextMenuShortcut>
               <Pen className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset onClick={() => handleClickMenu("delete")}>
-            Delete Collection
+          <ContextMenuItem className="cursor-pointer" inset onClick={() => handleClickMenu("delete")}>
+            Delete Drawing
             <ContextMenuShortcut>
               <Trash2 className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset>
+          <ContextMenuItem inset className="cursor-pointer">
             Share
             <ContextMenuShortcut>
               <Share2 className="h-4 w-4" />
@@ -115,9 +115,9 @@ const DrawingCard = ({ queryKey, drawing = {} }) => {
         refetch={() => {
           queryClient.invalidateQueries(queryKey);
         }}
-        openCollectionModal={openCollectionModal}
-        setOpenCollectionModal={setOpenCollectionModal}
-        collection={drawing}
+        openDrawModal={openCollectionModal}
+        setOpenDrawModal={setOpenCollectionModal}
+        drawing={drawing}
       />
     </Fragment>
   );

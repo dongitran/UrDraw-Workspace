@@ -32,15 +32,15 @@ const CollectionPage = () => {
       </div>
       <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-1 gap-3">
         {castArray(compact(get(data, "drawings"))).map((drawing) => {
-          return <DrawingCard queryKey={queryKey} drawing={drawing} />;
+          return <DrawingCard queryKey={queryKey} drawing={drawing} key={drawing.id} />;
         })}
       </div>
-      <DrawingModal
+      {/* <DrawingModal
         refetch={refetch}
         collectionId={id}
         openDrawModal={openDrawModal}
         setOpenDrawModal={setOpenDrawModal}
-      />
+      /> */}
     </Fragment>
   );
 };

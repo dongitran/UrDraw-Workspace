@@ -157,7 +157,7 @@ CollectionRoute.get("/", async (ctx) => {
     }
     const drawings = await db.query.DrawingTable.findMany({
       where: (clm, { eq, and, isNull }) => and(eq(clm.collectionId, collectionId), isNull(clm.deletedAt)),
-      orderBy: (clm, { desc }) => desc(clm.lastModified),
+      orderBy: (clm, { desc }) => desc(clm.id),
     });
     const response = {
       drawings,

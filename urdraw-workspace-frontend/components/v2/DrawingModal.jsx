@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createDrawing, deleteCollection, updateCollection } from "@/lib/api";
+import { createDrawing, deleteCollection, deleteDrawing, updateCollection, updateDrawing } from "@/lib/api";
 import { generateRandomThumbnail } from "@/lib/thumbnailGenerator";
 import { LoaderCircle } from "lucide-react";
 import { Fragment, useState } from "react";
@@ -56,7 +56,8 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
       return;
     }
     try {
-      await updateCollection(drawing.id, {
+      setLoading(true);
+      await updateDrawing(drawing.id, {
         name,
       });
       setOpenDrawModal(null);
@@ -66,6 +67,8 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
     } catch (error) {
       console.log("error :>> ", error);
       toast.error("Edit collection name failed");
+    } finally {
+      setLoading(false);
     }
   };
   const onDelete = async () => {
@@ -74,13 +77,16 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
       return;
     }
     try {
-      await deleteCollection(drawing.id);
+      setLoading(true);
+      await deleteDrawing(drawing.id);
       setOpenDrawModal(null);
       if (refetch) refetch();
-      toast.success("Delete collection name successfully");
+      toast.success("Delete drawing successfully");
     } catch (error) {
       console.log("error :>> ", error);
-      toast.error("Delete collection name failed");
+      toast.error("Delete drawing failed");
+    } finally {
+      setLoading(false);
     }
   };
   if (openDrawModal === "delete") {
@@ -89,7 +95,7 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
         <Dialog open={!!openDrawModal}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Delete collection</DialogTitle>
+              <DialogTitle>Delete drawing</DialogTitle>
               <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
             </DialogHeader>
 
@@ -98,10 +104,13 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
                 onClick={() => {
                   if (setOpenDrawModal) setOpenDrawModal();
                 }}
+                disabled={loading}
               >
+                {loading && <LoaderCircle className="animate-spin" />}
                 Close
               </Button>
-              <Button onClick={onDelete} variant="destructive">
+              <Button disabled={loading} onClick={onDelete} variant="destructive">
+                {loading && <LoaderCircle className="animate-spin" />}
                 Delete
               </Button>
             </DialogFooter>
@@ -139,10 +148,16 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
                 onClick={() => {
                   if (setOpenDrawModal) setOpenDrawModal();
                 }}
+                className="bg-slate-700 hover:bg-slate-900 text-white"
+                disabled={loading}
               >
+                {loading && <LoaderCircle className="animate-spin" />}
                 Close
               </Button>
-              <Button onClick={onEdit}>Save</Button>
+              <Button disabled={loading} onClick={onEdit} className="bg-green-700 hover:bg-green-900 text-white">
+                {loading && <LoaderCircle className="animate-spin" />}
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
