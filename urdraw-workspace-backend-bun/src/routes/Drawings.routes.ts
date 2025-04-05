@@ -8,6 +8,8 @@ import { isEmpty } from "lodash";
 import VerifyToken from "middlewares/VerifyToken";
 import { z } from "zod";
 
+const DEFAULT_THUMBNAIL = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%0A%20%20%20%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23fff2%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2256%22%20cy%3D%2249%22%20%0A%20%20%20%20%20%20r%3D%2222%22%20fill%3D%22%2314b8%22%20opacity%3D%220.6%22%2F%3E%0A%20%20%3C%2Fsvg%3E";
+
 const DrawingRoutes = new Hono();
 DrawingRoutes.use(VerifyToken());
 
@@ -45,7 +47,7 @@ DrawingRoutes.post(
     z.object({
       name: z.string(),
       collectionId: z.string().uuid(),
-      thumbnailUrl: z.string(),
+      thumbnailUrl: z.string().optional().nullable(),
       content: z.string(),
       type: z.enum(["excalidraw", "mermaid"]).default("excalidraw"),
       id: z.string().optional(),
@@ -56,6 +58,10 @@ DrawingRoutes.post(
     const { collectionId, content, name, thumbnailUrl, type, id } =
       ctx.req.valid("json");
     const now = dayjs().toISOString();
+    
+    const finalThumbnailUrl = thumbnailUrl === null || thumbnailUrl === undefined 
+      ? DEFAULT_THUMBNAIL 
+      : thumbnailUrl;
     
     if (id) {
       const existingDrawing = await db.query.DrawingTable.findFirst({
@@ -68,7 +74,7 @@ DrawingRoutes.post(
           collectionId,
           updatedAt: now,
           lastModified: now,
-          thumbnailUrl,
+          thumbnailUrl: finalThumbnailUrl,
           content,
           type,
         };
@@ -100,7 +106,7 @@ DrawingRoutes.post(
         userId: user.id,
         collectionId: collection.id,
         content,
-        thumbnailUrl,
+        thumbnailUrl: finalThumbnailUrl,
         lastModified: now,
         type: type || "excalidraw",
       })
