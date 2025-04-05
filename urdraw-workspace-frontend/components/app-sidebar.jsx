@@ -1,27 +1,26 @@
 "use client";
 
-import {
-  BarChartIcon,
-  CameraIcon,
-  ClipboardListIcon,
-  DatabaseIcon,
-  FileCodeIcon,
-  FileIcon,
-  FileTextIcon,
-  HelpCircleIcon,
-  LayoutDashboardIcon,
-  Lightbulb,
-  ListIcon,
-  SearchIcon,
-  SettingsIcon,
-} from "lucide-react";
-
 import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ClipboardListIcon,
+  DatabaseIcon,
+  FileIcon,
+  HelpCircleIcon,
+  Lightbulb,
+  LoaderCircle,
+  MailIcon,
+  SearchIcon,
+  SettingsIcon,
+} from "lucide-react";
+
 import {
   Sidebar,
+  SidebarInput,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
@@ -30,77 +29,20 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { CollectionShareApi, InitDataApi, WorkspaceApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { WorkspaceApi } from "@/lib/api";
+import { toast } from "sonner";
+import { useRef, useState } from "react";
 import { get } from "lodash";
 
 const initData = {
-  navMain: [
-    {
-      title: "My Workspace",
-      url: "/workspace-v2/1",
-      icon: LayoutDashboardIcon,
-    },
-    {
-      title: "My Workspace 2",
-      url: "/workspace-v2/2",
-      icon: ListIcon,
-    },
-    {
-      title: "My UrBox Workspace",
-      url: "/workspace-v2/3",
-      icon: BarChartIcon,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: CameraIcon,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: FileTextIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: FileCodeIcon,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
   navSecondary: [
+    {
+      title: "Invitations",
+      url: "/workspace-v2/invitation",
+      icon: MailIcon,
+      count: 0,
+    },
     {
       title: "Settings",
       url: "#",
@@ -138,20 +80,43 @@ const initData = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
-  const { data: workspaces } = useQuery({
-    queryKey: ["/workspaces"],
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef();
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["/init-data"],
     queryFn: () => {
-      return WorkspaceApi().get();
+      return InitDataApi().get();
     },
     enabled: !!user,
   });
+
+  const handleInvite = async () => {
+    try {
+      setLoading(true);
+      const code = inputRef.current?.value;
+      if (!code) {
+        toast.warning("Không nhận được giá trị của mã invite");
+        return;
+      }
+      await CollectionShareApi().join(code);
+      toast("Mã hợp lệ. Tham gia thành công!!!");
+      inputRef.current.value = "";
+      refetch();
+    } catch (error) {
+      console.log("error :>> ", error);
+      const message = get(error, "response.data.message") || "Mã không hợp lệ. Vui lòng thử lại";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
+              <a href="/workspace-v2">
                 <Lightbulb className="h-5 w-5" />
                 <span className="text-base font-semibold">Ur Draw</span>
               </a>
@@ -160,9 +125,24 @@ export function AppSidebar({ ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={workspaces} />
+        <NavMain isLoading={isLoading} items={get(data, "workspaces")} />
 
-        <NavDocuments items={initData.documents} />
+        <NavDocuments refetch={refetch} isLoading={isLoading} items={get(data, "shareWithMe")} />
+        <Card className="shadow-none">
+          <form>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm">Tham gia vào Collection</CardTitle>
+              <CardDescription>Nhập mã code được chia sẻ</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2.5 p-4">
+              <SidebarInput name="inviteCode" ref={inputRef} type="text" placeholder="Mã invite" disabled={loading} />
+              <Button disabled={loading} variant="primary" size="sm" onClick={handleInvite} type="button">
+                {loading && <LoaderCircle className="animate-spin" />}
+                Tham gia
+              </Button>
+            </CardContent>
+          </form>
+        </Card>
         <NavSecondary items={initData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

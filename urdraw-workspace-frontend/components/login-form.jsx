@@ -28,7 +28,9 @@ export function LoginForm({ className, ...props }) {
       const result = await directLogin(username, password);
       if (!result.success) {
         setError(result.error || "Login failed");
+        return;
       }
+      console.log("result :>> ", result);
       toast.message("Đăng nhập thành công", {
         description: dayjs().format("dddd, MMMM Do [at] h:mma"),
       });

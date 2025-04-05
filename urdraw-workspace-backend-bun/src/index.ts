@@ -8,6 +8,7 @@ import { logger } from "hono/logger";
 import { customLogger } from "@middlewars/index";
 import ErrorLog from "@middlewars/ErrorLog";
 import MongoConfig from "./config/mongodb";
+import InitDataRoute from "@route/InitData.routes";
 const app = new Hono();
 
 MongoConfig.connectToMongoDB();
@@ -19,7 +20,7 @@ app.route("/drawings", DrawingRoutes);
 app.route("/collections", CollectionRoute);
 app.route("/shares", ShareRoute);
 app.route("/workspaces", WorkspaceRoute);
-
+app.route("/init-data", InitDataRoute);
 app.onError(ErrorLog);
 
 export default app;

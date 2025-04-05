@@ -84,11 +84,7 @@ export const createDrawing = async (drawingData) => {
   }
 };
 
-export const initializeDrawingContent = async (
-  drawId,
-  title,
-  type = "excalidraw"
-) => {
+export const initializeDrawingContent = async (drawId, title, type = "excalidraw") => {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const token = getToken();
@@ -169,6 +165,14 @@ export const createCollection = async (collectionData) => {
     throw error;
   }
 };
+export const InitDataApi = () => {
+  const path = "/init-data";
+  const get = async () => {
+    const res = await apiClient.get(path);
+    return res.data;
+  };
+  return { get };
+};
 export const WorkspaceApi = () => {
   const path = "/workspaces";
   const post = async ({ name, description }) => {
@@ -213,7 +217,21 @@ export const deleteCollection = async (collectionId) => {
     throw error;
   }
 };
-
+export const CollectionShareApi = (path = "/shares") => {
+  const invite = async (data) => {
+    const res = await apiClient.post(`${path}/invite`, data);
+    return res.data;
+  };
+  const join = async (inviteCode) => {
+    const res = await apiClient.post("/shares/join", { inviteCode });
+    return res.data;
+  };
+  const unlink = async (collectionId, { type }) => {
+    const res = await apiClient.post(`${path}/${collectionId}/unlink`, { type });
+    return res.data;
+  };
+  return { invite, join, unlink };
+};
 export const createCollectionInvite = async (data) => {
   try {
     const response = await apiClient.post("/shares/invite", data);

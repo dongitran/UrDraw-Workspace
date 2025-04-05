@@ -8,5 +8,5 @@ import { Fragment } from "react";
 dayjs.extend(advancedFormat);
 
 export default function WorkspacePageV2() {
-  return <Fragment> Helloe</Fragment>;
+  return <Fragment>Helloe</Fragment>;
 }

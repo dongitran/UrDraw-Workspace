@@ -65,59 +65,27 @@ const DrawingCard = ({ queryKey, drawing = {} }) => {
           </Card>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-64">
-          <ContextMenuItem inset onClick={() => handleClickMenu("edit")}>
+          <ContextMenuItem inset className="cursor-pointer" onClick={() => handleClickMenu("edit")}>
             Edit Name
             <ContextMenuShortcut>
               <Pen className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset onClick={() => handleClickMenu("delete")}>
-            Delete Collection
+          <ContextMenuItem className="cursor-pointer" inset onClick={() => handleClickMenu("delete")}>
+            Delete Drawing
             <ContextMenuShortcut>
               <Trash2 className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
-          <ContextMenuItem inset>
-            Share
-            <ContextMenuShortcut>
-              <Share2 className="h-4 w-4" />
-            </ContextMenuShortcut>
-          </ContextMenuItem>
-          <ContextMenuSub>
-            <ContextMenuSubTrigger inset>More Tools</ContextMenuSubTrigger>
-            <ContextMenuSubContent className="w-48">
-              <ContextMenuItem>
-                Save Page As...
-                <ContextMenuShortcut>⇧⌘S</ContextMenuShortcut>
-              </ContextMenuItem>
-              <ContextMenuItem>Create Shortcut...</ContextMenuItem>
-              <ContextMenuItem>Name Window...</ContextMenuItem>
-              <ContextMenuSeparator />
-              <ContextMenuItem>Developer Tools</ContextMenuItem>
-            </ContextMenuSubContent>
-          </ContextMenuSub>
-          <ContextMenuSeparator />
-          <ContextMenuCheckboxItem checked>
-            Show Bookmarks Bar
-            <ContextMenuShortcut>⌘⇧B</ContextMenuShortcut>
-          </ContextMenuCheckboxItem>
-          <ContextMenuCheckboxItem>Show Full URLs</ContextMenuCheckboxItem>
-          <ContextMenuSeparator />
-          <ContextMenuRadioGroup value="pedro">
-            <ContextMenuLabel inset>People</ContextMenuLabel>
-            <ContextMenuSeparator />
-            <ContextMenuRadioItem value="pedro">Pedro Duarte</ContextMenuRadioItem>
-            <ContextMenuRadioItem value="colm">Colm Tuite</ContextMenuRadioItem>
-          </ContextMenuRadioGroup>
         </ContextMenuContent>
       </ContextMenu>
       <DrawingModal
         refetch={() => {
           queryClient.invalidateQueries(queryKey);
         }}
-        openCollectionModal={openCollectionModal}
-        setOpenCollectionModal={setOpenCollectionModal}
-        collection={drawing}
+        openDrawModal={openCollectionModal}
+        setOpenDrawModal={setOpenCollectionModal}
+        drawing={drawing}
       />
     </Fragment>
   );

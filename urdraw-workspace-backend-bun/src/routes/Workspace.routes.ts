@@ -5,13 +5,16 @@ import db from "db/db";
 import { CollectionTable, DrawingTable, WorkspaceTable } from "db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
+import { keyBy } from "lodash";
 import { ulid } from "ulid";
 import { z } from "zod";
 
 const WorkspaceRoute = new Hono();
 WorkspaceRoute.use(VerifyToken());
 WorkspaceRoute.get("/", async (ctx) => {
+  const user = ctx.get("user");
   const workspaces = await db.query.WorkspaceTable.findMany({
+    where: (clm, { eq }) => eq(clm.userId, user.id),
     columns: { id: true, name: true, description: true },
     orderBy: (clm, { asc }) => asc(clm.id),
   });
@@ -31,7 +34,9 @@ WorkspaceRoute.get("/", async (ctx) => {
       where: (clm, { eq, and }) => and(eq(clm.userId, user.id), eq(clm.id, id)),
       with: {
         collections: {
-          with: { drawings: true },
+          with: {
+            drawings: true,
+          },
           orderBy: (clm, { desc }) => desc(clm.id),
           where: (clm, { isNull }) => isNull(clm.deletedAt),
         },
@@ -39,10 +44,27 @@ WorkspaceRoute.get("/", async (ctx) => {
     });
     if (!workspace) return ctx.json({ message: "Workspace not found" }, 404);
     const collections: any[] = workspace.collections;
+    const shares = await db.query.CollectionShareTable.findMany({
+      where: (clm, { isNull, eq, and, inArray }) => {
+        return and(
+          isNull(clm.deletedAt),
+          inArray(
+            clm.collectionId,
+            collections.map((item) => item.id)
+          )
+        );
+      },
+    });
+    const keyCollectionIdByShare = keyBy(shares, "collectionId");
     return ctx.json({
       id: workspace.id,
       collections: collections.map((item) => {
         item.drawingCount = item.drawings.length;
+        const share = keyCollectionIdByShare[item.id];
+        if (share && share.expiresAt && dayjs(share.expiresAt).isAfter(dayjs())) {
+          item.inviteCode = share.inviteCode || null;
+          item.expiresAt = share.expiresAt || null;
+        }
         delete item.drawings;
         return item;
       }),
@@ -61,7 +83,6 @@ WorkspaceRoute.post(
   async (ctx) => {
     const user = ctx.get("user");
     const { name, description } = ctx.req.valid("json");
-    console.log("user :>> ", user);
     await db.insert(WorkspaceTable).values({
       createdAt: dayjs().toISOString(),
       id: ulid(),
@@ -127,7 +148,6 @@ WorkspaceRoute.delete(
       },
     });
     if (!workspace) return ctx.json({ message: "Workspace not found" }, 404);
-    console.log("workspace :>> ", workspace);
     const drawingIds: string[] = [],
       collectionIds: string[] = [];
     for (const collection of workspace.collections) {
