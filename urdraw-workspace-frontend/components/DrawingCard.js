@@ -49,8 +49,7 @@ export default function DrawingCard({ drawing, onClick, onDelete, onEdit }) {
 
       const token = getToken();
       if (token) {
-        const drawingContent = JSON.parse(drawing.content);
-        if (drawingContent?.type === "mermaid") {
+        if (drawing?.type === "mermaid") {
           const data = await getDrawingContentFromBackend(drawing.id);
 
           const drawingUrl = buildUrDrawUrl(token, drawing.id, drawing?.type);
