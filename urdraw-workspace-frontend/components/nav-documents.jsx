@@ -21,11 +21,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { castArray, compact } from "lodash";
 import { usePathname, useRouter } from "next/navigation";
 import { Fragment } from "react";
+import { CollectionShareApi } from "@/lib/api";
+import { toast } from "sonner";
 
-export function NavDocuments({ isLoading, items }) {
+export function NavDocuments({ isLoading, items, refetch }) {
   const { isMobile } = useSidebar();
   const pathname = usePathname();
   const router = useRouter();
+  const handleUnlink = async (item) => {
+    try {
+      await CollectionShareApi().unlink(item.collectionId, { type: "collection" });
+      toast("Hủy tham gia thành công");
+      if (refetch) refetch();
+      if (pathname === `/workspace-v2/collection/${item.collectionId}`) {
+        router.push("/workspace-v2");
+        return;
+      }
+    } catch (error) {
+      toast.error("Hủy tham gia thất bại");
+    } finally {
+    }
+  };
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Share with my</SidebarGroupLabel>
@@ -68,7 +84,7 @@ export function NavDocuments({ isLoading, items }) {
                     <Info />
                     <span>Xem chi tiết</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleUnlink(item)}>
                     <Unlink />
                     <span>Hủy tham gia</span>
                   </DropdownMenuItem>

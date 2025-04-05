@@ -31,4 +31,5 @@ InitDataRoute.get("/", async (ctx) => {
     ],
   });
 });
+
 export default InitDataRoute;

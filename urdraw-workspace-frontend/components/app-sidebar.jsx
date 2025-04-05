@@ -89,7 +89,7 @@ export function AppSidebar({ ...props }) {
     },
     enabled: !!user,
   });
-  console.log("data :>> ", data);
+
   const handleInvite = async () => {
     try {
       setLoading(true);
@@ -127,7 +127,7 @@ export function AppSidebar({ ...props }) {
       <SidebarContent>
         <NavMain isLoading={isLoading} items={get(data, "workspaces")} />
 
-        <NavDocuments isLoading={isLoading} items={get(data, "shareWithMe")} />
+        <NavDocuments refetch={refetch} isLoading={isLoading} items={get(data, "shareWithMe")} />
         <Card className="shadow-none">
           <form>
             <CardHeader className="p-4 pb-0">

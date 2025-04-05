@@ -226,7 +226,11 @@ export const CollectionShareApi = (path = "/shares") => {
     const res = await apiClient.post("/shares/join", { inviteCode });
     return res.data;
   };
-  return { invite, join };
+  const unlink = async (collectionId, { type }) => {
+    const res = await apiClient.post(`${path}/${collectionId}/unlink`, { type });
+    return res.data;
+  };
+  return { invite, join, unlink };
 };
 export const createCollectionInvite = async (data) => {
   try {
