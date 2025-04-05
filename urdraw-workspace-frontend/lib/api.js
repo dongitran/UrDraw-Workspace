@@ -38,8 +38,7 @@ apiClient.interceptors.response.use(
 
     if (
       error.response?.status === 401 ||
-      (error.response?.data?.error === "invalid_grant" &&
-        !originalRequest._retry)
+      (error.response?.data?.error === "invalid_grant" && !originalRequest._retry)
     ) {
       originalRequest._retry = true;
 
@@ -84,7 +83,7 @@ export const createDrawing = async (drawingData) => {
   }
 };
 
-export const initializeDrawingContent = async (drawId, title, type) => {
+export const initializeDrawingContent = async (drawId, title, type = "excalidraw") => {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
     const token = getToken();
@@ -148,9 +147,7 @@ export const getCollectionDetails = async (collectionId) => {
 
 export const fetchCollectionDrawings = async (collectionId) => {
   try {
-    const response = await apiClient.get(
-      `/collections/${collectionId}/drawings`
-    );
+    const response = await apiClient.get(`/collections/${collectionId}/drawings`);
     return response.data;
   } catch (error) {
     console.error("Error fetching collection drawings:", error);
@@ -167,13 +164,34 @@ export const createCollection = async (collectionData) => {
     throw error;
   }
 };
+export const WorkspaceApi = () => {
+  const path = "/workspaces";
+  const post = async ({ name, description }) => {
+    const response = await apiClient.post(path, { description, name });
+    return response.data;
+  };
+  const get = async () => {
+    const res = await apiClient.get(path);
+    return res.data;
+  };
+  const detail = async (id) => {
+    const res = await apiClient.get(`${path}/${id}`);
+    return res.data;
+  };
+  const patch = async (id, body) => {
+    const res = await apiClient.patch(`${path}/${id}`, body);
+    return res.data;
+  };
+  const _delete = async (id) => {
+    const res = await apiClient.delete(`${path}/${id}`);
+    return res.data;
+  };
+  return { post, get, detail, patch, delete: _delete };
+};
 
 export const updateCollection = async (collectionId, collectionData) => {
   try {
-    const response = await apiClient.put(
-      `/collections/${collectionId}`,
-      collectionData
-    );
+    const response = await apiClient.put(`/collections/${collectionId}`, collectionData);
     return response.data;
   } catch (error) {
     console.error("Error updating collection:", error);
@@ -190,7 +208,13 @@ export const deleteCollection = async (collectionId) => {
     throw error;
   }
 };
-
+export const CollectionShareApi = (path = "/shares") => {
+  const invite = async (data) => {
+    const res = await apiClient.post(`${path}/invite`, data);
+    return res.data;
+  };
+  return { invite };
+};
 export const createCollectionInvite = async (data) => {
   try {
     const response = await apiClient.post("/shares/invite", data);

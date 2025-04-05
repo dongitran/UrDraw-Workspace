@@ -1,12 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import {
-  createCollectionInvite,
-  getCollectionShares,
-  removeCollectionShare,
-  updateSharePermission,
-} from "@/lib/api";
+import { useEffect, useState } from "react";
+import { createCollectionInvite, getCollectionShares, removeCollectionShare, updateSharePermission } from "@/lib/api";
 
 export default function ShareCollectionModal({ isOpen, onClose, collection }) {
   const [inviteCode, setInviteCode] = useState("");
@@ -26,10 +21,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
       const shareData = await getCollectionShares(collection.id);
       setShares(shareData);
     } catch (error) {
-      setError(
-        "Error loading shares: " +
-          (error.response?.data?.message || error.message)
-      );
+      setError("Error loading shares: " + (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -57,10 +49,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
 
       setInviteCode(data.inviteCode);
     } catch (error) {
-      setError(
-        "Error creating invite: " +
-          (error.response?.data?.message || error.message)
-      );
+      setError("Error creating invite: " + (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }
@@ -79,10 +68,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
         await removeCollectionShare(shareId);
         loadShares();
       } catch (error) {
-        setError(
-          "Error removing share: " +
-            (error.response?.data?.message || error.message)
-        );
+        setError("Error removing share: " + (error.response?.data?.message || error.message));
       } finally {
         setIsLoading(false);
       }
@@ -95,83 +81,56 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
       await updateSharePermission(shareId, newPermission);
       loadShares();
     } catch (error) {
-      setError(
-        "Error updating permission: " +
-          (error.response?.data?.message || error.message)
-      );
+      setError("Error updating permission: " + (error.response?.data?.message || error.message));
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800">
-            {showShares ? "Manage Collection Shares" : "Share Collection"}
+            {showShares ? "Manage Collection Shares" : "Share Collecti123on"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
 
         <div className="flex border-b mb-4">
           <button
-            className={`py-2 px-4 ${
-              !showShares
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500"
-            }`}
+            className={`py-2 px-4 ${!showShares ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
             onClick={() => setShowShares(false)}
           >
             Create Invite
           </button>
           <button
-            className={`py-2 px-4 ${
-              showShares
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-500"
-            }`}
+            className={`py-2 px-4 ${showShares ? "border-b-2 border-blue-500 text-blue-600" : "text-gray-500"}`}
             onClick={() => setShowShares(true)}
           >
             Manage Shares
           </button>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
 
         {!showShares ? (
           <>
             {!inviteCode ? (
               <form onSubmit={handleCreateInvite}>
                 <div className="mb-4">
-                  <label
-                    htmlFor="permission"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
+                  <label htmlFor="permission" className="block text-sm font-medium text-gray-700 mb-1">
                     Permission
                   </label>
                   <select
@@ -186,10 +145,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
                 </div>
 
                 <div className="mb-4">
-                  <label
-                    htmlFor="expiration"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
+                  <label htmlFor="expiration" className="block text-sm font-medium text-gray-700 mb-1">
                     Expires in
                   </label>
                   <select
@@ -213,11 +169,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={isLoading}
-                  >
+                  <button type="submit" className="btn-primary" disabled={isLoading}>
                     {isLoading ? "Generating..." : "Generate Invite Code"}
                   </button>
                 </div>
@@ -260,10 +212,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
                 </div>
                 <p className="text-sm text-gray-600 mb-6">
                   Share this code with others to give them{" "}
-                  <span className="font-medium">
-                    {permission === "view" ? "view-only" : "edit"}
-                  </span>{" "}
-                  access.
+                  <span className="font-medium">{permission === "view" ? "view-only" : "edit"}</span> access.
                 </p>
                 <div className="flex justify-center space-x-2">
                   <button
@@ -284,9 +233,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
             {isLoading ? (
               <div className="text-center py-4">Loading...</div>
             ) : shares.length === 0 ? (
-              <p className="text-center py-4 text-gray-500">
-                No users have access to this collection yet.
-              </p>
+              <p className="text-center py-4 text-gray-500">No users have access to this collection yet.</p>
             ) : (
               <div className="overflow-y-auto max-h-64">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -312,9 +259,7 @@ export default function ShareCollectionModal({ isOpen, onClose, collection }) {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <select
                             value={share.permission}
-                            onChange={(e) =>
-                              handleUpdatePermission(share.id, e.target.value)
-                            }
+                            onChange={(e) => handleUpdatePermission(share.id, e.target.value)}
                             className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           >
                             <option value="view">View only</option>

@@ -17,6 +17,12 @@ import ShareCollectionModal from "@/components/ShareCollectionModal";
 import JoinCollectionModal from "@/components/JoinCollectionModal";
 import Notification from "@/components/Notification";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { toast } from "sonner";
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
+import { Button } from "@/components/ui/button";
+
+dayjs.extend(advancedFormat);
 
 export default function WorkspacePage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -68,10 +74,7 @@ export default function WorkspacePage() {
   const loadCollections = async () => {
     try {
       setLoading(true);
-      const [ownedCollections, shared] = await Promise.all([
-        fetchUserCollections(),
-        getSharedCollections(),
-      ]);
+      const [ownedCollections, shared] = await Promise.all([fetchUserCollections(), getSharedCollections()]);
       setCollections(ownedCollections);
       setSharedCollections(shared);
     } catch (error) {
@@ -86,15 +89,16 @@ export default function WorkspacePage() {
     router.push(`/workspace/collection/${collectionId}`);
   };
 
-  const handleCreateCollection = async (name) => {
+  const handleCreateCollection = async (name, callback) => {
     try {
       const newCollection = await createCollection({ name });
+      toast.success("Collection created successfully");
       setCollections([newCollection, ...collections]);
       setIsCreateModalOpen(false);
-      showNotification("Collection created successfully", "success");
+      if (callback) callback();
     } catch (error) {
       console.error("Error creating collection:", error);
-      showNotification("Error creating collection", "error");
+      toast.error("Error creating collection");
     }
   };
 
@@ -109,11 +113,7 @@ export default function WorkspacePage() {
         name,
       });
       setCollections(
-        collections.map((c) =>
-          c.id === updatedCollection.id
-            ? { ...c, name: updatedCollection.name }
-            : c
-        )
+        collections.map((c) => (c.id === updatedCollection.id ? { ...c, name: updatedCollection.name } : c))
       );
       setIsEditModalOpen(false);
       showNotification("Collection name updated successfully", "success");
@@ -127,10 +127,12 @@ export default function WorkspacePage() {
     try {
       await deleteCollection(collectionId);
       setCollections(collections.filter((c) => c.id !== collectionId));
-      showNotification("Collection deleted successfully", "success");
+      toast.message("Collection deleted successfully", {
+        description: dayjs().format("dddd, MMMM Do [at] h:mma"),
+      });
     } catch (error) {
       console.error("Error deleting collection:", error);
-      showNotification("Error deleting collection", "error");
+      // showNotification("Error deleting collection", "error");
     }
   };
 
@@ -162,10 +164,7 @@ export default function WorkspacePage() {
     setIsCreateModalOpen(true);
   };
 
-  if (
-    authLoading ||
-    (loading && !collections.length && !sharedCollections.length)
-  ) {
+  if (authLoading || (loading && !collections.length && !sharedCollections.length)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="large" message="Loading workspace..." />
@@ -176,11 +175,7 @@ export default function WorkspacePage() {
   return (
     <div className="container mx-auto p-4">
       {notification && (
-        <Notification
-          message={notification.message}
-          type={notification.type}
-          onClose={() => setNotification(null)}
-        />
+        <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
       )}
 
       <div className="mb-6">
@@ -192,12 +187,7 @@ export default function WorkspacePage() {
               onClick={handleActionClick}
               className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" />
               </svg>
               Actions
@@ -220,7 +210,7 @@ export default function WorkspacePage() {
                   >
                     <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
                   </svg>
-                  Join Collection
+                  Join Collection 123
                 </button>
                 <button
                   onClick={openCreateModal}
@@ -245,25 +235,17 @@ export default function WorkspacePage() {
           </div>
 
           <div className="hidden md:flex space-x-3">
-            <button
-              onClick={() => setIsJoinModalOpen(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => setIsJoinModalOpen(true)}>
               Join Collection
-            </button>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-600" onClick={() => setIsCreateModalOpen(true)}>
               Create Collection
-            </button>
+            </Button>
           </div>
         </div>
 
         {collections.length === 0 ? (
-          <p className="text-gray-500">
-            No collections yet. Create your first collection!
-          </p>
+          <p className="text-gray-500">No collections yet. Create your first collection!</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {collections.map((collection) => (
@@ -277,14 +259,9 @@ export default function WorkspacePage() {
                 <button
                   onClick={() => handleShareCollection(collection)}
                   className="absolute top-2 left-2 p-1 rounded-full bg-white bg-opacity-80 hover:bg-opacity-100 text-blue-600"
-                  title="Share Collection"
+                  title="Share Collection1231"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
                   </svg>
                 </button>
@@ -303,9 +280,7 @@ export default function WorkspacePage() {
                 <CollectionCard
                   collection={{
                     ...collection,
-                    name: `${collection.name} (${
-                      collection.permission === "view" ? "View" : "Edit"
-                    })`,
+                    name: `${collection.name} (${collection.permission === "view" ? "View" : "Edit"})`,
                   }}
                   onClick={() => handleOpenCollection(collection.id)}
                 />
