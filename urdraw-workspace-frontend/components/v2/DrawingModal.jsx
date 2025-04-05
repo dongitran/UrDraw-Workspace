@@ -27,6 +27,7 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
     }
     try {
       setLoading(true);
+
       await createDrawing({
         name,
         collectionId,
@@ -90,8 +91,12 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
     }
   };
   useEffect(() => {
-    setName(drawing.name);
-    setType(drawing.type);
+    if (drawing.name) {
+      setName(drawing.name);
+    }
+    if (drawing.type) {
+      setType(drawing.type);
+    }
   }, [drawing]);
   if (openDrawModal === "delete") {
     return (

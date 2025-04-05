@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderIcon, GalleryVerticalEnd, Info, MoreHorizontalIcon, ShareIcon, Trash2Icon, Unlink } from "lucide-react";
+import { GalleryVerticalEnd, Info, MoreHorizontalIcon, Unlink } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -17,13 +17,15 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { castArray, compact } from "lodash";
 import { Skeleton } from "@/components/ui/skeleton";
+import { castArray, compact } from "lodash";
+import { usePathname, useRouter } from "next/navigation";
 import { Fragment } from "react";
 
 export function NavDocuments({ isLoading, items }) {
   const { isMobile } = useSidebar();
-
+  const pathname = usePathname();
+  const router = useRouter();
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Share with my</SidebarGroupLabel>
@@ -38,7 +40,13 @@ export function NavDocuments({ isLoading, items }) {
         {items &&
           compact(castArray(items)).map((item) => (
             <SidebarMenuItem key={item.collectionId}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton
+                asChild
+                onClick={() => {
+                  router.push(`/workspace-v2/collection/${item.collectionId}`);
+                }}
+                isActive={pathname === `/workspace-v2/collection/${item.collectionId}`}
+              >
                 <div>
                   {item.type === "collection" && <GalleryVerticalEnd />}
                   <span>{item.collectionName}</span>
