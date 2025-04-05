@@ -39,8 +39,9 @@ const initData = {
   navSecondary: [
     {
       title: "Invitations",
-      url: "#",
+      url: "/workspace-v2/invitation",
       icon: MailIcon,
+      count: 0,
     },
     {
       title: "Settings",

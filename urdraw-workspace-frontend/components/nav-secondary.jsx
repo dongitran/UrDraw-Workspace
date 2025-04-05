@@ -8,20 +8,22 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
+import { usePathname } from "next/navigation";
+import { isNil } from "lodash";
 export function NavSecondary({ items, ...props }) {
+  const pathname = usePathname();
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
-                <a href="#">
+              <SidebarMenuButton asChild isActive={item.url === pathname}>
+                <a href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
                   <div className="ml-auto"></div>
-                  <span className="text-red-600 font-semibold text-xs">123</span>
+                  {item.count && <span className="font-semibold text-xs">{item.count}</span>}
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
