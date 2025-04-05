@@ -48,12 +48,42 @@ DrawingRoutes.post(
       thumbnailUrl: z.string(),
       content: z.string(),
       type: z.enum(["excalidraw", "mermaid"]).default("excalidraw"),
+      id: z.string().optional(),
     })
   ),
   async (ctx) => {
     const user = ctx.get("user");
-    const { collectionId, content, name, thumbnailUrl, type } =
+    const { collectionId, content, name, thumbnailUrl, type, id } =
       ctx.req.valid("json");
+    const now = dayjs().toISOString();
+    
+    if (id) {
+      const existingDrawing = await db.query.DrawingTable.findFirst({
+        where: (clm, { eq, and }) => and(eq(clm.id, id), eq(clm.userId, user.id)),
+      });
+      
+      if (existingDrawing) {
+        const bodyUpdate = {
+          name,
+          collectionId,
+          updatedAt: now,
+          lastModified: now,
+          thumbnailUrl,
+          content,
+          type,
+        };
+        
+        const updatedDrawing = await db
+          .update(DrawingTable)
+          .set(bodyUpdate)
+          .where(eq(DrawingTable.id, id))
+          .returning()
+          .then((res) => res[0]);
+          
+        return ctx.json(updatedDrawing);
+      }
+    }
+    
     const collection = await db.query.CollectionTable.findFirst({
       where: (clm, { and, eq }) =>
         and(eq(clm.userId, user.id), eq(clm.id, collectionId)),
@@ -62,16 +92,16 @@ DrawingRoutes.post(
     const draw = await db
       .insert(DrawingTable)
       .values({
-        createdAt: dayjs().toISOString(),
-        id: Bun.randomUUIDv7(),
+        createdAt: now,
+        id: id || Bun.randomUUIDv7(),
         name,
         workspaceId: collection.workspaceId,
-        updatedAt: dayjs().toISOString(),
+        updatedAt: now,
         userId: user.id,
         collectionId: collection.id,
         content,
         thumbnailUrl,
-        lastModified: dayjs().toISOString(),
+        lastModified: now,
         type: type || "excalidraw",
       })
       .returning()
