@@ -17,7 +17,6 @@ import CreateDrawingModal from "@/components/CreateDrawingModal";
 import EditDrawingModal from "@/components/EditDrawingModal";
 import Notification from "@/components/Notification";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { buildUrDrawUrl } from "@/lib/config";
 
 export default function CollectionPage() {
   const { id: collectionId } = useParams();
@@ -72,28 +71,6 @@ export default function CollectionPage() {
     }
   };
 
-  const handleOpenDrawing = async (drawingId) => {
-    try {
-      const token = getToken();
-      if (!token) {
-        showNotification("Authentication error. Please log in again.", "error");
-        return;
-      }
-
-      const drawing = drawings.find((d) => d.id === drawingId);
-      if (!drawing) {
-        showNotification("Drawing not found", "error");
-        return;
-      }
-
-      const url = buildUrDrawUrl(token, drawingId, drawing.type);
-      window.open(url, "_blank");
-    } catch (error) {
-      console.error("Error opening drawing:", error);
-      showNotification("Error opening drawing", "error");
-    }
-  };
-
   const handleCreateDrawing = async (name, type = "excalidraw") => {
     if (isShared && permission !== "edit") {
       showNotification(
@@ -109,15 +86,15 @@ export default function CollectionPage() {
         collectionId,
         thumbnailUrl: generateRandomThumbnail(name),
         content: JSON.stringify({
-          type: type,
+          type,
           version: 2,
           source: "urdraw-workspace",
           elements: [],
         }),
-        type: type,
+        type,
       });
 
-      initializeDrawingContent(newDrawing.id, name).catch((err) =>
+      initializeDrawingContent(newDrawing.id, name, type).catch((err) =>
         console.error("Error initializing drawing content:", err)
       );
 

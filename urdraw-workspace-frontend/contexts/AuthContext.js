@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }) => {
       const userInfo = getUserInfo();
       setUser(userInfo);
 
-      router.push("/workspace");
+      router.push("/workspace-v2");
 
       return { success: true };
     } catch (error) {
@@ -137,10 +137,7 @@ export const AuthProvider = ({ children }) => {
           console.log("Calling Keycloak logout API...");
 
           const formData = new URLSearchParams();
-          formData.append(
-            "client_id",
-            process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID
-          );
+          formData.append("client_id", process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID);
           formData.append("refresh_token", refreshToken);
 
           const response = await fetch(
@@ -156,11 +153,7 @@ export const AuthProvider = ({ children }) => {
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error(
-              "Keycloak logout API failed:",
-              response.status,
-              errorText
-            );
+            console.error("Keycloak logout API failed:", response.status, errorText);
           } else {
             console.log("Keycloak logout API successful");
           }
@@ -175,16 +168,12 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("oauth_state");
       localStorage.removeItem("keycloak_token");
 
-      document.cookie =
-        "KEYCLOAK_SESSION=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie =
-        "KEYCLOAK_IDENTITY=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie =
-        "KEYCLOAK_REMEMBER_ME=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "KEYCLOAK_SESSION=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "KEYCLOAK_IDENTITY=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      document.cookie = "KEYCLOAK_REMEMBER_ME=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 
       try {
-        const keycloakDomain = new URL(process.env.NEXT_PUBLIC_KEYCLOAK_URL)
-          .hostname;
+        const keycloakDomain = new URL(process.env.NEXT_PUBLIC_KEYCLOAK_URL).hostname;
         document.cookie = `KEYCLOAK_SESSION=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${keycloakDomain};`;
         document.cookie = `KEYCLOAK_IDENTITY=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${keycloakDomain};`;
         document.cookie = `KEYCLOAK_REMEMBER_ME=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${keycloakDomain};`;
@@ -203,7 +192,7 @@ export const AuthProvider = ({ children }) => {
         keycloak.idTokenParsed = null;
       }
 
-      window.location.href = window.location.origin;
+      window.location.href = "/login";
 
       return true;
     } catch (error) {

@@ -6,7 +6,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { CollectionShareTable } from "db/schema";
 import dayjs from "dayjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 const ShareRoute = new Hono();
 ShareRoute.use(VerifyToken());
@@ -56,25 +56,49 @@ ShareRoute.post(
     z.object({
       collectionId: z.string(),
       permission: z.enum(["view", "edit"]),
-      expiresInDays: z.number().optional(),
+      expriedIn: z.string(),
     })
   ),
   async (ctx) => {
-    const { collectionId, expiresInDays, permission } = ctx.req.valid("json");
+    const { collectionId, expriedIn, permission } = ctx.req.valid("json");
     const user = ctx.get("user");
 
     const collection = await db.query.CollectionTable.findFirst({
       where: (clm, { eq, and }) => and(eq(clm.id, collectionId), eq(clm.userId, user.id)),
     });
     if (!collection) return ctx.json({ message: "Collection not found" }, 404);
+    const share = await db.query.CollectionShareTable.findFirst({
+      where: (clm, { and, eq, isNull }) => {
+        return and(isNull(clm.deletedAt), eq(clm.collectionId, collection.id), eq(clm.ownerId, user.id));
+      },
+
+      orderBy: (clm, { desc }) => desc(clm.createdAt),
+    });
+    if (share && dayjs(share.expiresAt).isAfter(dayjs())) {
+      return ctx.json({
+        inviteCode: share.inviteCode,
+        permission: share.permission,
+        expiresAt: share.expiresAt,
+      });
+    }
+    await db
+      .update(CollectionShareTable)
+      .set({
+        deletedAt: dayjs().toISOString(),
+      })
+      .where(and(eq(CollectionShareTable.collectionId, collection.id), eq(CollectionShareTable.ownerId, user.id)));
+
     const inviteCode = crypto.randomBytes(6).toString("hex");
 
     let expiresAt = null;
-    if (expiresInDays) {
-      expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+    if (expriedIn) {
+      const [value, type] = expriedIn.split("-");
+      expiresAt = dayjs().add(+value, type as any);
     }
-    const share = await db
+    if (!expiresAt) {
+      return ctx.json({ message: "Không tạo được thời gian hết hạn của Invite code" }, 404);
+    }
+    const newShare = await db
       .insert(CollectionShareTable)
       .values({
         id: Bun.randomUUIDv7(),
@@ -83,7 +107,7 @@ ShareRoute.post(
         inviteCode,
         permission: permission || "view",
         status: "pending",
-        expiresAt: expiresAt?.toISOString(),
+        expiresAt: expiresAt.toISOString(),
         createdAt: dayjs().toISOString(),
         updatedAt: dayjs().toISOString(),
       })
@@ -91,9 +115,9 @@ ShareRoute.post(
       .then((res) => res[0]);
 
     return ctx.json({
-      inviteCode: share.inviteCode,
-      permission: share.permission,
-      expiresAt: share.expiresAt,
+      inviteCode: newShare.inviteCode,
+      permission: newShare.permission,
+      expiresAt: newShare.expiresAt,
     });
   }
 ).post(
