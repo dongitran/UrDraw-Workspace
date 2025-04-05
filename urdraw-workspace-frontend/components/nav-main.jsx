@@ -17,11 +17,12 @@ import {
 } from "@/components/ui/sidebar";
 import WorkspaceModal from "@/components/v2/Workspace/Modal";
 import { castArray, compact } from "lodash";
-import { FolderIcon, MoreHorizontalIcon, Pen, PlusCircleIcon, ShareIcon, Trash2 } from "lucide-react";
+import { MoreHorizontalIcon, Pen, PlusCircleIcon, Trash2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { Fragment, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function NavMain({ items }) {
+export function NavMain({ items, isLoading }) {
   const [openWorkspaceModal, setOpenWorkspaceModal] = useState("");
   return (
     <SidebarGroup>
@@ -41,6 +42,14 @@ export function NavMain({ items }) {
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
+          {isLoading && (
+            <Fragment>
+              <Skeleton className="w-full h-4 rounded-sm" />
+              <Skeleton className="w-full h-4 rounded-sm" />
+              <Skeleton className="w-full h-4 rounded-sm" />
+            </Fragment>
+          )}
+
           {compact(castArray(items)).map((item) => {
             return <MySidebarMenuItem item={item} key={item.id} />;
           })}

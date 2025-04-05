@@ -120,41 +120,70 @@ ShareRoute.post(
       expiresAt: newShare.expiresAt,
     });
   }
-).post(
-  "/join",
-  zValidator(
-    "json",
-    z.object({
-      inviteCode: z.string(),
-    })
-  ),
-  async (ctx) => {
-    const user = ctx.get("user");
-    const { inviteCode } = ctx.req.valid("json");
-    const share = await db.query.CollectionShareTable.findFirst({
-      where: (clm, { eq }) => eq(clm.inviteCode, inviteCode),
-      with: { collection: true },
-    });
-    if (!share) return ctx.json({ message: "Invaild invite code" }, 404);
-    if (share.expiresAt && dayjs(share.expiresAt) < dayjs()) {
-      return ctx.json({ message: "Invite code has expired" }, 400);
+)
+  .post(
+    "/join",
+    zValidator(
+      "json",
+      z.object({
+        inviteCode: z.string(),
+      })
+    ),
+    async (ctx) => {
+      const user = ctx.get("user");
+      const { inviteCode } = ctx.req.valid("json");
+      const share = await db.query.CollectionShareTable.findFirst({
+        where: (clm, { eq }) => eq(clm.inviteCode, inviteCode),
+        with: { collection: true },
+      });
+      if (!share) return ctx.json({ message: "Invaild invite code" }, 404);
+      if (share.expiresAt && dayjs(share.expiresAt) < dayjs()) {
+        return ctx.json({ message: "Invite code has expired" }, 400);
+      }
+      if (share.ownerId === user.id) {
+        return ctx.json({ message: "You cannot join your own collection" }, 403);
+      }
+      if (share.sharedWithId === user.id && share.status === "accepted") {
+        return ctx.json({ message: "You already have access to this collection" }, 400);
+      }
+      await db
+        .update(CollectionShareTable)
+        .set({ sharedWithId: user.id, status: "accepted" })
+        .where(eq(CollectionShareTable.id, share.id));
+      return ctx.json({
+        message: "Successfully joined collection",
+        collection: share.collection,
+      });
     }
-    if (share.ownerId === user.id) {
-      return ctx.json({ message: "You cannot join your own collection" }, 403);
+  )
+  .post(
+    "/:collectionId/unlink",
+    zValidator(
+      "param",
+      z.object({
+        collectionId: z.string().uuid(),
+      })
+    ),
+    zValidator(
+      "json",
+      z.object({
+        type: z.enum(["collection"]),
+      })
+    ),
+    async (ctx) => {
+      const user = ctx.get("user");
+      const { type } = ctx.req.valid("json");
+      const { collectionId } = ctx.req.valid("param");
+      if (type === "collection") {
+        const record = await db.query.CollectionShareTable.findFirst({
+          where: (clm, { eq, and }) => and(eq(clm.collectionId, collectionId), eq(clm.sharedWithId, user.id)),
+        });
+        if (!record) return ctx.json({ message: "Không tìm thấy thông tin" }, 404);
+        await db.delete(CollectionShareTable).where(eq(CollectionShareTable.id, record.id));
+      }
+      return ctx.json({ message: "success" });
     }
-    if (share.sharedWithId === user.id && share.status === "accepted") {
-      return ctx.json({ message: "You already have access to this collection" }, 400);
-    }
-    await db
-      .update(CollectionShareTable)
-      .set({ sharedWithId: user.id, status: "accepted" })
-      .where(eq(CollectionShareTable.id, share.id));
-    return ctx.json({
-      message: "Successfully joined collection",
-      collection: share.collection,
-    });
-  }
-);
+  );
 
 ShareRoute.put(
   "/:shareId",

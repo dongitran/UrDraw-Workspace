@@ -12,7 +12,9 @@ import { z } from "zod";
 const WorkspaceRoute = new Hono();
 WorkspaceRoute.use(VerifyToken());
 WorkspaceRoute.get("/", async (ctx) => {
+  const user = ctx.get("user");
   const workspaces = await db.query.WorkspaceTable.findMany({
+    where: (clm, { eq }) => eq(clm.userId, user.id),
     columns: { id: true, name: true, description: true },
     orderBy: (clm, { asc }) => asc(clm.id),
   });
@@ -58,8 +60,11 @@ WorkspaceRoute.get("/", async (ctx) => {
       id: workspace.id,
       collections: collections.map((item) => {
         item.drawingCount = item.drawings.length;
-        item.inviteCode = keyCollectionIdByShare[item.id]?.inviteCode || null;
-        item.expiresAt = keyCollectionIdByShare[item.id]?.expiresAt || null;
+        const share = keyCollectionIdByShare[item.id];
+        if (share && share.expiresAt && dayjs(share.expiresAt).isAfter(dayjs())) {
+          item.inviteCode = share.inviteCode || null;
+          item.expiresAt = share.expiresAt || null;
+        }
         delete item.drawings;
         return item;
       }),
@@ -78,7 +83,6 @@ WorkspaceRoute.post(
   async (ctx) => {
     const user = ctx.get("user");
     const { name, description } = ctx.req.valid("json");
-    console.log("user :>> ", user);
     await db.insert(WorkspaceTable).values({
       createdAt: dayjs().toISOString(),
       id: ulid(),
