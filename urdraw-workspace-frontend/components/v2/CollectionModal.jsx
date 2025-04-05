@@ -272,11 +272,11 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
                 onClick={() => {
                   if (setOpenCollectionModal) setOpenCollectionModal();
                 }}
-                className="bg-slate-700 hover:bg-slate-800 text-white"
+                variant="close"
               >
                 Close
               </Button>
-              <Button onClick={onEdit} className="bg-green-700 hover:bg-green-800 text-white">
+              <Button onClick={onEdit} variant="success">
                 Save
               </Button>
             </DialogFooter>
@@ -314,10 +314,13 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
                 onClick={() => {
                   if (setOpenCollectionModal) setOpenCollectionModal();
                 }}
+                variant="close"
               >
                 Close
               </Button>
-              <Button onClick={onSave}>Save</Button>
+              <Button onClick={onSave} variant="success">
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

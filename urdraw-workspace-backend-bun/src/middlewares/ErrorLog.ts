@@ -9,7 +9,7 @@ const ErrorLog = async (error: Error | HTTPResponseError, ctx: Context) => {
   const log = {
     path: ctx.req.routePath,
     method: ctx.req.method,
-    userId: ctx.get("user").id,
+    userId: ctx.get("user")?.id,
     error: parse(stringify(error)),
     message: get(error, "message"),
     content: {

@@ -5,7 +5,7 @@ import { Fragment } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarIcon } from "lucide-react";
 
-const InvitationPage = () => {
+const InvitationPage = async () => {
   return (
     <Fragment>
       <div className="grid grid-cols-1 gap-3">

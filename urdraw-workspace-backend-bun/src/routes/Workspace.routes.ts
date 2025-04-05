@@ -12,7 +12,9 @@ import { z } from "zod";
 const WorkspaceRoute = new Hono();
 WorkspaceRoute.use(VerifyToken());
 WorkspaceRoute.get("/", async (ctx) => {
+  const user = ctx.get("user");
   const workspaces = await db.query.WorkspaceTable.findMany({
+    where: (clm, { eq }) => eq(clm.userId, user.id),
     columns: { id: true, name: true, description: true },
     orderBy: (clm, { asc }) => asc(clm.id),
   });
@@ -81,7 +83,6 @@ WorkspaceRoute.post(
   async (ctx) => {
     const user = ctx.get("user");
     const { name, description } = ctx.req.valid("json");
-    console.log("user :>> ", user);
     await db.insert(WorkspaceTable).values({
       createdAt: dayjs().toISOString(),
       id: ulid(),

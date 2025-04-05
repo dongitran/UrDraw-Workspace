@@ -1,28 +1,26 @@
 "use client";
 
+import { NavDocuments } from "@/components/nav-documents";
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  BarChartIcon,
-  CameraIcon,
   ClipboardListIcon,
   DatabaseIcon,
-  FileCodeIcon,
   FileIcon,
-  FileTextIcon,
   HelpCircleIcon,
-  LayoutDashboardIcon,
   Lightbulb,
-  ListIcon,
+  LoaderCircle,
   MailIcon,
   SearchIcon,
   SettingsIcon,
 } from "lucide-react";
 
-import { NavDocuments } from "@/components/nav-documents";
-import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
-import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
+  SidebarInput,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
@@ -31,8 +29,10 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { CollectionShareApi, WorkspaceApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
-import { WorkspaceApi } from "@/lib/api";
+import { toast } from "sonner";
+import { useRef, useState } from "react";
 import { get } from "lodash";
 
 const initData = {
@@ -80,6 +80,8 @@ const initData = {
 
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef();
   const { data: workspaces } = useQuery({
     queryKey: ["/workspaces"],
     queryFn: () => {
@@ -87,6 +89,25 @@ export function AppSidebar({ ...props }) {
     },
     enabled: !!user,
   });
+  const handleInvite = async () => {
+    try {
+      setLoading(true);
+      const code = inputRef.current?.value;
+      if (!code) {
+        toast.warning("Không nhận được giá trị của mã invite");
+        return;
+      }
+      await CollectionShareApi().join(code);
+      toast("Mã hợp lệ. Tham gia thành công!!!");
+      inputRef.current.value = "";
+    } catch (error) {
+      console.log("error :>> ", error);
+      const message = get(error, "response.data.message") || "Mã không hợp lệ. Vui lòng thử lại";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -105,6 +126,21 @@ export function AppSidebar({ ...props }) {
         <NavMain items={workspaces} />
 
         <NavDocuments items={initData.documents} />
+        <Card className="shadow-none">
+          <form>
+            <CardHeader className="p-4 pb-0">
+              <CardTitle className="text-sm">Tham gia vào Collection</CardTitle>
+              <CardDescription>Nhập mã code được chia sẻ</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-2.5 p-4">
+              <SidebarInput name="inviteCode" ref={inputRef} type="text" placeholder="Mã invite" disabled={loading} />
+              <Button disabled={loading} variant="primary" size="sm" onClick={handleInvite} type="button">
+                {loading && <LoaderCircle className="animate-spin" />}
+                Tham gia
+              </Button>
+            </CardContent>
+          </form>
+        </Card>
         <NavSecondary items={initData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
