@@ -1,5 +1,4 @@
 "use client";
-import * as React from "react";
 
 import {
   SidebarGroup,
@@ -9,7 +8,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
-import { isNil } from "lodash";
 export function NavSecondary({ items, ...props }) {
   const pathname = usePathname();
   return (

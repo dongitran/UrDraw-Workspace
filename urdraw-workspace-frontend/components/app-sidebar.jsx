@@ -29,7 +29,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { CollectionShareApi, WorkspaceApi } from "@/lib/api";
+import { CollectionShareApi, InitDataApi, WorkspaceApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
@@ -82,13 +82,14 @@ export function AppSidebar({ ...props }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const inputRef = useRef();
-  const { data: workspaces } = useQuery({
-    queryKey: ["/workspaces"],
+  const { data, refetch } = useQuery({
+    queryKey: ["/init-data"],
     queryFn: () => {
-      return WorkspaceApi().get();
+      return InitDataApi().get();
     },
     enabled: !!user,
   });
+  console.log("data :>> ", data);
   const handleInvite = async () => {
     try {
       setLoading(true);
@@ -100,6 +101,7 @@ export function AppSidebar({ ...props }) {
       await CollectionShareApi().join(code);
       toast("Mã hợp lệ. Tham gia thành công!!!");
       inputRef.current.value = "";
+      refetch();
     } catch (error) {
       console.log("error :>> ", error);
       const message = get(error, "response.data.message") || "Mã không hợp lệ. Vui lòng thử lại";
@@ -123,9 +125,9 @@ export function AppSidebar({ ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={workspaces} />
+        <NavMain items={get(data, "workspaces")} />
 
-        <NavDocuments items={initData.documents} />
+        <NavDocuments items={get(data, "shareWithMe")} />
         <Card className="shadow-none">
           <form>
             <CardHeader className="p-4 pb-0">

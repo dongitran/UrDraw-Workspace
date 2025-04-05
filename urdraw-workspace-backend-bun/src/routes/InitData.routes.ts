@@ -18,14 +18,17 @@ InitDataRoute.get("/", async (ctx) => {
   });
   return ctx.json({
     workspaces,
-    sharedCollections: shareList.map((item) => {
-      return {
-        collectionId: item.collection.id,
-        collectionName: item.collection.name,
-        permission: item.permission,
-        expiresAt: item.expiresAt,
-      };
-    }),
+    shareWithMe: [
+      ...shareList.map((item) => {
+        return {
+          collectionId: item.collection.id,
+          collectionName: item.collection.name,
+          permission: item.permission,
+          expiresAt: item.expiresAt,
+          type: "collection",
+        };
+      }),
+    ],
   });
 });
 export default InitDataRoute;

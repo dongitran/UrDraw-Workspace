@@ -165,6 +165,14 @@ export const createCollection = async (collectionData) => {
     throw error;
   }
 };
+export const InitDataApi = () => {
+  const path = "/init-data";
+  const get = async () => {
+    const res = await apiClient.get(path);
+    return res.data;
+  };
+  return { get };
+};
 export const WorkspaceApi = () => {
   const path = "/workspaces";
   const post = async ({ name, description }) => {
