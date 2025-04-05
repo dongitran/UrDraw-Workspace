@@ -12,6 +12,7 @@ import {
   LayoutDashboardIcon,
   Lightbulb,
   ListIcon,
+  MailIcon,
   SearchIcon,
   SettingsIcon,
 } from "lucide-react";
@@ -36,6 +37,11 @@ import { get } from "lodash";
 
 const initData = {
   navSecondary: [
+    {
+      title: "Invitations",
+      url: "#",
+      icon: MailIcon,
+    },
     {
       title: "Settings",
       url: "#",
