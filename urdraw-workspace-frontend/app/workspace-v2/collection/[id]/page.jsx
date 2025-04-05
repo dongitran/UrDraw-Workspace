@@ -35,12 +35,12 @@ const CollectionPage = () => {
           return <DrawingCard queryKey={queryKey} drawing={drawing} key={drawing.id} />;
         })}
       </div>
-      {/* <DrawingModal
+      <DrawingModal
         refetch={refetch}
         collectionId={id}
         openDrawModal={openDrawModal}
         setOpenDrawModal={setOpenDrawModal}
-      /> */}
+      />
     </Fragment>
   );
 };
