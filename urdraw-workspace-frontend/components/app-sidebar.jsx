@@ -82,7 +82,7 @@ export function AppSidebar({ ...props }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const inputRef = useRef();
-  const { data, refetch } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey: ["/init-data"],
     queryFn: () => {
       return InitDataApi().get();
@@ -125,9 +125,9 @@ export function AppSidebar({ ...props }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={get(data, "workspaces")} />
+        <NavMain isLoading={isLoading} items={get(data, "workspaces")} />
 
-        <NavDocuments items={get(data, "shareWithMe")} />
+        <NavDocuments isLoading={isLoading} items={get(data, "shareWithMe")} />
         <Card className="shadow-none">
           <form>
             <CardHeader className="p-4 pb-0">

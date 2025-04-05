@@ -18,15 +18,23 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { castArray, compact } from "lodash";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Fragment } from "react";
 
-export function NavDocuments({ items }) {
-  console.log("items :>> ", items);
+export function NavDocuments({ isLoading, items }) {
   const { isMobile } = useSidebar();
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
       <SidebarGroupLabel>Share with my</SidebarGroupLabel>
       <SidebarMenu>
+        {isLoading && (
+          <Fragment>
+            <Skeleton className="w-full h-4 rounded-sm" />
+            <Skeleton className="w-full h-4 rounded-sm" />
+            <Skeleton className="w-full h-4 rounded-sm" />
+          </Fragment>
+        )}
         {items &&
           compact(castArray(items)).map((item) => (
             <SidebarMenuItem key={item.collectionId}>
