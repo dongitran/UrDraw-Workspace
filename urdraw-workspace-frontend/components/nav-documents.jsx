@@ -30,7 +30,7 @@ export function NavDocuments({ isLoading, items, refetch }) {
   const router = useRouter();
   const handleUnlink = async (item) => {
     try {
-      await CollectionShareApi().unlink(item.collectionId, { type: "collection" });
+      await CollectionShareApi().unlink(item.collectionId, { type: "collection", inviteCode: item.inviteCode });
       toast("Hủy tham gia thành công");
       if (refetch) refetch();
       if (pathname === `/workspace-v2/collection/${item.collectionId}`) {

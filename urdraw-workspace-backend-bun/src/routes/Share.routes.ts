@@ -168,15 +168,17 @@ ShareRoute.post(
       "json",
       z.object({
         type: z.enum(["collection"]),
+        inviteCode: z.string(),
       })
     ),
     async (ctx) => {
       const user = ctx.get("user");
-      const { type } = ctx.req.valid("json");
+      const { type, inviteCode } = ctx.req.valid("json");
       const { collectionId } = ctx.req.valid("param");
       if (type === "collection") {
         const record = await db.query.CollectionShareTable.findFirst({
-          where: (clm, { eq, and }) => and(eq(clm.collectionId, collectionId), eq(clm.sharedWithId, user.id)),
+          where: (clm, { eq, and }) =>
+            and(eq(clm.inviteCode, inviteCode), eq(clm.collectionId, collectionId), eq(clm.sharedWithId, user.id)),
         });
         if (!record) return ctx.json({ message: "Không tìm thấy thông tin" }, 404);
         await db.delete(CollectionShareTable).where(eq(CollectionShareTable.id, record.id));
