@@ -17,7 +17,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Pen, Share2, Trash2 } from "lucide-react";
+import { FileClock, Pen, Share2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CollectionModal from "@/components/v2/CollectionModal";
 import { useQueryClient } from "@tanstack/react-query";
@@ -76,6 +76,12 @@ const CollectionCard = ({ queryKey, collection = {} }) => {
             Share
             <ContextMenuShortcut>
               <Share2 className="h-4 w-4" />
+            </ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuItem inset onClick={() => router.push(`/workspace-v2/collection/${collection.id}/logs`)}>
+            Lịch sử thay đổi
+            <ContextMenuShortcut>
+              <FileClock className="h-4 w-4" />
             </ContextMenuShortcut>
           </ContextMenuItem>
           <ContextMenuSub>
