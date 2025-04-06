@@ -8,6 +8,7 @@ import { CollectionShareTable, InviteCodeTable } from "db/schema";
 import dayjs from "dayjs";
 import { and, eq } from "drizzle-orm";
 import { ulid } from "ulid";
+import { get } from "lodash";
 
 const ShareRoute = new Hono();
 ShareRoute.use(VerifyToken());
@@ -51,112 +52,58 @@ ShareRoute.get("/collections", async (ctx) => {
 });
 
 ShareRoute.post(
-  "/invite",
+  "/join",
   zValidator(
     "json",
     z.object({
-      collectionId: z.string(),
-      permission: z.enum(["view", "edit"]),
-      expriedIn: z.string(),
+      inviteCode: z.string(),
     })
   ),
   async (ctx) => {
-    const { collectionId, expriedIn, permission } = ctx.req.valid("json");
     const user = ctx.get("user");
-
-    const collection = await db.query.CollectionTable.findFirst({
-      where: (clm, { eq, and }) => and(eq(clm.id, collectionId), eq(clm.userId, user.id)),
+    const { inviteCode } = ctx.req.valid("json");
+    const record = await db.query.InviteCodeTable.findFirst({
+      where: (clm, { eq }) => eq(clm.id, inviteCode),
     });
-    if (!collection) return ctx.json({ message: "Collection not found" }, 404);
-    const share = await db.query.CollectionShareTable.findFirst({
-      where: (clm, { and, eq, isNull }) => {
-        return and(isNull(clm.deletedAt), eq(clm.collectionId, collection.id), eq(clm.ownerId, user.id));
-      },
-
-      orderBy: (clm, { desc }) => desc(clm.createdAt),
-    });
-    if (share && dayjs(share.expiresAt).isAfter(dayjs())) {
-      return ctx.json({
-        inviteCode: share.inviteCode,
-        permission: share.permission,
-        expiresAt: share.expiresAt,
-      });
+    if (!record) return ctx.json({ message: "Invaild invite code" }, 404);
+    if (record.expiresAt && dayjs(record.expiresAt) < dayjs()) {
+      return ctx.json({ message: "Invite code has expired" }, 400);
     }
-    await db
-      .update(CollectionShareTable)
-      .set({
-        deletedAt: dayjs().toISOString(),
-      })
-      .where(and(eq(CollectionShareTable.collectionId, collection.id), eq(CollectionShareTable.ownerId, user.id)));
-
-    const inviteCode = crypto.randomBytes(6).toString("hex");
-
-    let expiresAt = null;
-    if (expriedIn) {
-      const [value, type] = expriedIn.split("-");
-      expiresAt = dayjs().add(+value, type as any);
+    if (record.userId === user.id) {
+      return ctx.json({ message: "You cannot join your own collection" }, 403);
     }
-    if (!expiresAt) {
-      return ctx.json({ message: "Không tạo được thời gian hết hạn của Invite code" }, 404);
-    }
-    const newShare = await db
-      .insert(CollectionShareTable)
-      .values({
-        id: Bun.randomUUIDv7(),
-        collectionId: collection.id,
-        ownerId: user.id,
-        inviteCode,
-        permission: permission || "view",
-        status: "pending",
-        expiresAt: expiresAt.toISOString(),
-        createdAt: dayjs().toISOString(),
-        updatedAt: dayjs().toISOString(),
-      })
-      .returning()
-      .then((res) => res[0]);
-
-    return ctx.json({
-      inviteCode: newShare.inviteCode,
-      permission: newShare.permission,
-      expiresAt: newShare.expiresAt,
-    });
-  }
-)
-  .post(
-    "/join",
-    zValidator(
-      "json",
-      z.object({
-        inviteCode: z.string(),
-      })
-    ),
-    async (ctx) => {
-      const user = ctx.get("user");
-      const { inviteCode } = ctx.req.valid("json");
+    if (record.type === "collection") {
       const share = await db.query.CollectionShareTable.findFirst({
-        where: (clm, { eq }) => eq(clm.inviteCode, inviteCode),
-        with: { collection: true },
+        where: (clm, { eq, and, isNull }) =>
+          and(
+            eq(clm.collectionId, record.relatedId),
+            eq(clm.sharedWithId, user.id),
+            eq(clm.ownerId, record.userId),
+            isNull(clm.deletedAt)
+          ),
       });
-      if (!share) return ctx.json({ message: "Invaild invite code" }, 404);
-      if (share.expiresAt && dayjs(share.expiresAt) < dayjs()) {
-        return ctx.json({ message: "Invite code has expired" }, 400);
-      }
-      if (share.ownerId === user.id) {
-        return ctx.json({ message: "You cannot join your own collection" }, 403);
-      }
-      if (share.sharedWithId === user.id && share.status === "accepted") {
+      if (share) {
         return ctx.json({ message: "You already have access to this collection" }, 400);
       }
-      await db
-        .update(CollectionShareTable)
-        .set({ sharedWithId: user.id, status: "accepted" })
-        .where(eq(CollectionShareTable.id, share.id));
-      return ctx.json({
-        message: "Successfully joined collection",
-        collection: share.collection,
+      await db.insert(CollectionShareTable).values({
+        collectionId: record.relatedId,
+        createdAt: dayjs().toISOString(),
+        inviteCode,
+        ownerId: record.userId,
+        expiresAt: record.expiresAt,
+        permission: get(record, "params.permission"),
+        sharedWithId: user.id,
+        status: "accepted",
+        id: Bun.randomUUIDv7(),
+        updatedAt: dayjs().toISOString(),
       });
+      return ctx.json({ message: "Successfully joined collection" });
+    } else if (record.type === "workspace") {
+      return ctx.json({ message: "Successfully joined workspace" });
     }
-  )
+    return ctx.json({ message: "Type invalid" }, 400);
+  }
+)
   .post(
     "/:collectionId/unlink",
     zValidator(

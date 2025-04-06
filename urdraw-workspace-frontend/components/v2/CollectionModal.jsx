@@ -191,35 +191,7 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
               <TabsContent value="manage">
                 <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-auto">
                   {compact(castArray(collection.inviteCodes)).map((item) => {
-                    return (
-                      <div className="border rounded-sm p-3" key={item.id}>
-                        <div className="text-xs text-muted-foreground">
-                          Invite Code (<span className="capitalize">{get(item, "params.permission")}</span>)
-                        </div>
-                        <div className="text-lg font-bold flex gap-3">
-                          <span className="truncate w-60">{item.id}</span>
-                          <div className="ml-auto"></div>
-                          {isCopied ? (
-                            <CopyCheck className="cursor-pointer" />
-                          ) : (
-                            <Copy
-                              className="cursor-pointer"
-                              onClick={async () => {
-                                setIsCopied(true);
-                                toast("Đã copy mã invite");
-                                await navigator.clipboard.writeText(inviteCode);
-                                setTimeout(() => {
-                                  setIsCopied(false);
-                                }, 7000);
-                              }}
-                            />
-                          )}
-                        </div>
-                        <p className="mt-1 text-xs font-medium text-muted-foreground/50">
-                          Expires at: {dayjs().format("HH:mm DD/MM/YYYY")}
-                        </p>
-                      </div>
-                    );
+                    return <InviteCodeUI item={item} key={item.id} />;
                   })}
                 </div>
               </TabsContent>
@@ -394,3 +366,36 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
   }
 };
 export default CollectionModal;
+
+const InviteCodeUI = ({ item }) => {
+  const [isCopied, setIsCopied] = useState(false);
+  return (
+    <div className="border rounded-sm p-3" key={item.id}>
+      <div className="text-xs text-muted-foreground">
+        Invite Code (<span className="capitalize">{get(item, "params.permission")}</span>)
+      </div>
+      <div className="text-lg font-bold flex gap-3">
+        <span className="truncate w-60">{item.id}</span>
+        <div className="ml-auto"></div>
+        {isCopied ? (
+          <CopyCheck className="cursor-pointer" />
+        ) : (
+          <Copy
+            className="cursor-pointer"
+            onClick={async () => {
+              setIsCopied(true);
+              toast("Đã copy mã invite");
+              await navigator.clipboard.writeText(item.id);
+              setTimeout(() => {
+                setIsCopied(false);
+              }, 7000);
+            }}
+          />
+        )}
+      </div>
+      <p className="mt-1 text-xs font-medium text-muted-foreground/50">
+        Expires at: {dayjs(item.expiresAt).format("HH:mm DD/MM/YYYY")}
+      </p>
+    </div>
+  );
+};
