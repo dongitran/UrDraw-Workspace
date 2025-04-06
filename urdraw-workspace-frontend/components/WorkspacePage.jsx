@@ -13,8 +13,9 @@ export function WorkspacePage() {
   const { id } = useParams();
   const router = useRouter();
   const [openCollectionModal, setOpenCollectionModal] = useState("");
+  const [value, setValue] = useState("");
   const queryKey = ["/workspaces/" + id];
-  const { data, refetch } = useQuery({
+  const { data, refetch, isLoading } = useQuery({
     queryKey,
     queryFn: () => {
       return WorkspaceApi().detail(id);
@@ -25,11 +26,21 @@ export function WorkspacePage() {
       router.push("/workspace-v2");
     },
   });
-
+  if (isLoading || !data) return null;
   return (
     <Fragment>
       <div className="flex gap-3 ">
-        <ComboboxDemo />
+        <ComboboxDemo
+          items={data.collections.map((item) => {
+            return {
+              value: item.name,
+              label: item.name,
+              type: item.type,
+            };
+          })}
+          value={value}
+          setValue={setValue}
+        />
         <div className="ml-auto"></div>
 
         <Button
@@ -41,9 +52,14 @@ export function WorkspacePage() {
         </Button>
       </div>
       <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-1 gap-3">
-        {castArray(compact(get(data, "collections"))).map((collection) => {
-          return <CollectionCard queryKey={queryKey} collection={collection} key={collection.id} />;
-        })}
+        {castArray(compact(get(data, "collections")))
+          .filter((c) => {
+            if (!value) return true;
+            return c.name === value;
+          })
+          .map((collection) => {
+            return <CollectionCard queryKey={queryKey} collection={collection} key={collection.id} />;
+          })}
       </div>
       <CollectionModal
         workspace={data}

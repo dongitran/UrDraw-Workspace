@@ -64,6 +64,7 @@ WorkspaceRoute.get("/", async (ctx) => {
       collections: collections.map((item) => {
         item.drawingCount = item.drawings.length;
         item.inviteCodes = groupByCollectionId[item.id];
+        item.type = "collection";
         delete item.drawings;
         return item;
       }),
