@@ -4,9 +4,10 @@ import { Hono } from "hono";
 import VerifyToken from "middlewares/VerifyToken";
 import { z } from "zod";
 import crypto from "crypto";
-import { CollectionShareTable } from "db/schema";
+import { CollectionShareTable, InviteCodeTable } from "db/schema";
 import dayjs from "dayjs";
 import { and, eq } from "drizzle-orm";
+import { ulid } from "ulid";
 
 const ShareRoute = new Hono();
 ShareRoute.use(VerifyToken());
@@ -184,6 +185,47 @@ ShareRoute.post(
         await db.delete(CollectionShareTable).where(eq(CollectionShareTable.id, record.id));
       }
       return ctx.json({ message: "success" });
+    }
+  )
+  .post(
+    "/create-invite-code",
+    zValidator(
+      "json",
+      z.object({
+        type: z.enum(["collection", "workspace"]),
+        permission: z.enum(["edit", "view"]),
+        expiresIn: z.string(),
+        relatedId: z.string(),
+      })
+    ),
+    async (ctx) => {
+      const user = ctx.get("user");
+      const { expiresIn, permission, type, relatedId } = ctx.req.valid("json");
+      let expiresAt = null;
+      if (expiresIn) {
+        const [value, type] = expiresIn.split("-");
+        expiresAt = dayjs().add(+value, type as any);
+      }
+      if (!expiresAt) return ctx.json({ message: "Không thể tạo ngày hết hạn" }, 400);
+
+      const record = await db
+        .insert(InviteCodeTable)
+        .values({
+          createdAt: dayjs().toISOString(),
+          expiresAt: expiresAt.toISOString(),
+          relatedId,
+          type,
+          userId: user.id,
+          createdBy: user.id,
+          params: {
+            permission,
+            expiresIn,
+          },
+          id: ulid(),
+        })
+        .returning()
+        .then((res) => res[0]);
+      return ctx.json({ code: record.id });
     }
   );
 

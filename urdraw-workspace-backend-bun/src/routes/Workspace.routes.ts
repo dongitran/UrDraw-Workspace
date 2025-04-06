@@ -5,7 +5,7 @@ import db from "db/db";
 import { CollectionTable, DrawingTable, WorkspaceTable } from "db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
-import { keyBy } from "lodash";
+import { groupBy } from "lodash";
 import { ulid } from "ulid";
 import { z } from "zod";
 
@@ -44,27 +44,26 @@ WorkspaceRoute.get("/", async (ctx) => {
     });
     if (!workspace) return ctx.json({ message: "Workspace not found" }, 404);
     const collections: any[] = workspace.collections;
-    const shares = await db.query.CollectionShareTable.findMany({
+    const inviteCodeList = await db.query.InviteCodeTable.findMany({
       where: (clm, { isNull, eq, and, inArray }) => {
         return and(
           isNull(clm.deletedAt),
+          eq(clm.type, "collection"),
           inArray(
-            clm.collectionId,
+            clm.relatedId,
             collections.map((item) => item.id)
           )
         );
       },
+      orderBy: (clm, { desc }) => desc(clm.id),
+      columns: { id: true, expiresAt: true, type: true, relatedId: true, params: true },
     });
-    const keyCollectionIdByShare = keyBy(shares, "collectionId");
+    const groupByCollectionId = groupBy(inviteCodeList, "relatedId");
     return ctx.json({
       id: workspace.id,
       collections: collections.map((item) => {
         item.drawingCount = item.drawings.length;
-        const share = keyCollectionIdByShare[item.id];
-        if (share && share.expiresAt && dayjs(share.expiresAt).isAfter(dayjs())) {
-          item.inviteCode = share.inviteCode || null;
-          item.expiresAt = share.expiresAt || null;
-        }
+        item.inviteCodes = groupByCollectionId[item.id];
         delete item.drawings;
         return item;
       }),

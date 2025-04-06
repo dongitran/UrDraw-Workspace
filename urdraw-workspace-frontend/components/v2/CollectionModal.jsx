@@ -15,13 +15,13 @@ import { CollectionShareApi, createCollection, deleteCollection, updateCollectio
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Copy, CopyCheck, LoaderCircle } from "lucide-react";
-import { get } from "lodash";
+import { castArray, compact, get } from "lodash";
 import dayjs from "dayjs";
 
 const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollectionModal, setOpenCollectionModal }) => {
   const [name, setName] = useState();
   const [permission, setPermission] = useState();
-  const [expriedIn, setExpriedIn] = useState();
+  const [expiresIn, setExpiresIn] = useState();
   const [loading, setLoading] = useState(false);
   const [inviteCode, setInviteCode] = useState();
   const [isCopied, setIsCopied] = useState(false);
@@ -77,7 +77,7 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
     }
   };
   const onShareCollection = async () => {
-    if (!permission || !expriedIn) {
+    if (!permission || !expiresIn) {
       toast.warning("Giá trị chưa đầy đủ để tạo");
       return;
     } else if (!collection.id) {
@@ -86,11 +86,16 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
     }
     try {
       setLoading(true);
-      const data = { permission, expriedIn, collectionId: collection.id };
-      const res = await CollectionShareApi().invite(data);
-      if (get(res, "inviteCode")) {
-        setInviteCode(get(res, "inviteCode"));
+      const res = await CollectionShareApi().createInviteCode({
+        type: "collection",
+        permission,
+        expiresIn: expiresIn,
+        relatedId: collection.id,
+      });
+      if (res && res.code) {
+        setInviteCode(res.code);
       }
+      toast.success("Đã tạo mã invite thành công");
     } catch (error) {
       toast.error("Có lỗi khi tạo code invite");
     } finally {
@@ -107,7 +112,7 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
     return (
       <Fragment>
         <Dialog open={!!openCollectionModal}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[475px]">
             <DialogHeader>
               <DialogTitle>Share collection</DialogTitle>
             </DialogHeader>
@@ -123,46 +128,76 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
               </TabsList>
               <TabsContent value="create">
                 <div className="grid gap-4 py-4">
-                  {!inviteCode && (
-                    <Fragment>
-                      <div className="grid grid-cols-1 items-center gap-4">
-                        <Label htmlFor="name" className="">
-                          Permission
-                        </Label>
-                        <Select onValueChange={(e) => setPermission(e)}>
-                          <SelectTrigger id="name" className="">
-                            <SelectValue placeholder="Select permission" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="view">View</SelectItem>
-                            <SelectItem value="edit">Edit</SelectItem>
-                          </SelectContent>
-                        </Select>
+                  <Fragment>
+                    <div className="grid grid-cols-1 items-center gap-4">
+                      <Label htmlFor="name" className="">
+                        Permission
+                      </Label>
+                      <Select onValueChange={(e) => setPermission(e)}>
+                        <SelectTrigger id="name" className="">
+                          <SelectValue placeholder="Select permission" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="view">View</SelectItem>
+                          <SelectItem value="edit">Edit</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-1 items-center gap-4">
+                      <Label htmlFor="expired_in" className="">
+                        Expires in
+                      </Label>
+                      <Select onValueChange={(e) => setExpiresIn(e)}>
+                        <SelectTrigger id="expired_in" className="">
+                          <SelectValue placeholder="Select permission" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1-day">1 Day</SelectItem>
+                          <SelectItem value="7-day">7 Day</SelectItem>
+                          <SelectItem value="30-day">30 Day</SelectItem>
+                          <SelectItem value="never">Never</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </Fragment>
+                </div>
+                {inviteCode && (
+                  <Fragment>
+                    <div className="border rounded-sm p-3">
+                      <p className="text-xs text-muted-foreground">Invite Code</p>
+                      <div className="text-lg font-bold flex gap-3">
+                        <span className="truncate w-52">{inviteCode}</span>
+                        <div className="ml-auto"></div>
+                        {isCopied ? (
+                          <CopyCheck className="cursor-pointer" />
+                        ) : (
+                          <Copy
+                            className="cursor-pointer"
+                            onClick={async () => {
+                              setIsCopied(true);
+                              toast("Đã copy mã invite");
+                              await navigator.clipboard.writeText(inviteCode);
+                              setTimeout(() => {
+                                setIsCopied(false);
+                              }, 7000);
+                            }}
+                          />
+                        )}
                       </div>
-                      <div className="grid grid-cols-1 items-center gap-4">
-                        <Label htmlFor="expired_in" className="">
-                          Expires in
-                        </Label>
-                        <Select onValueChange={(e) => setExpriedIn(e)}>
-                          <SelectTrigger id="expired_in" className="">
-                            <SelectValue placeholder="Select permission" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1-day">1 Day</SelectItem>
-                            <SelectItem value="7-day">7 Day</SelectItem>
-                            <SelectItem value="30-day">30 Day</SelectItem>
-                            <SelectItem value="never">Never</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </Fragment>
-                  )}
-                  {inviteCode && (
-                    <Fragment>
-                      <div className="border rounded-sm p-3">
-                        <p className="text-xs text-muted-foreground">Invite Code</p>
+                    </div>
+                  </Fragment>
+                )}
+              </TabsContent>
+              <TabsContent value="manage">
+                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-auto">
+                  {compact(castArray(collection.inviteCodes)).map((item) => {
+                    return (
+                      <div className="border rounded-sm p-3" key={item.id}>
+                        <div className="text-xs text-muted-foreground">
+                          Invite Code (<span className="capitalize">{get(item, "params.permission")}</span>)
+                        </div>
                         <div className="text-lg font-bold flex gap-3">
-                          <span>{inviteCode}</span>
+                          <span className="truncate w-60">{item.id}</span>
                           <div className="ml-auto"></div>
                           {isCopied ? (
                             <CopyCheck className="cursor-pointer" />
@@ -180,37 +215,36 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
                             />
                           )}
                         </div>
-                        <p className="text-xs mt-3 text-muted-foreground/50">
-                          Expires at: {collection.expiresAt && dayjs(collection.expiresAt).format("HH:mm - DD/MM/YYYY")}
+                        <p className="mt-1 text-xs font-medium text-muted-foreground/50">
+                          Expires at: {dayjs().format("HH:mm DD/MM/YYYY")}
                         </p>
                       </div>
-                    </Fragment>
-                  )}
+                    );
+                  })}
                 </div>
               </TabsContent>
-              <TabsContent value="manage">Change your password here.</TabsContent>
             </Tabs>
 
             <DialogFooter>
               <Button
                 onClick={() => {
                   if (setOpenCollectionModal) setOpenCollectionModal();
+                  setInviteCode(null);
                 }}
                 disabled={loading}
+                variant="close"
               >
                 {loading && <LoaderCircle className="animate-spin" />}
                 Close
               </Button>
-              {!inviteCode && (
-                <Button
-                  disabled={loading}
-                  onClick={onShareCollection}
-                  className="bg-green-700 text-white hover:bg-green-800"
-                >
-                  {loading && <LoaderCircle className="animate-spin" />}
-                  Create
-                </Button>
-              )}
+              <Button
+                disabled={loading}
+                onClick={onShareCollection}
+                className="bg-green-700 text-white hover:bg-green-800"
+              >
+                {loading && <LoaderCircle className="animate-spin" />}
+                Create
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

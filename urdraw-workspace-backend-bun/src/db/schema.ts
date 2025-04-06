@@ -1,7 +1,6 @@
 import { pgTable, uuid, varchar, timestamp, foreignKey, text, unique, pgEnum, jsonb } from "drizzle-orm/pg-core";
+import { cloneDeep } from "lodash";
 
-export const enumCollectionSharesPermission = pgEnum("enum_collection_shares_permission", ["view", "edit"]);
-export const enumCollectionSharesStatus = pgEnum("enum_collection_shares_status", ["pending", "accepted"]);
 const commonTable = {
   id: varchar({ length: 255 }).primaryKey().unique().notNull(),
   userId: varchar("user_id", { length: 255 }).notNull(),
@@ -13,11 +12,21 @@ const commonTable = {
   deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
   deletedBy: varchar("deleted_by", { length: 255 }),
 };
+
 export const WorkspaceTable = pgTable("workspaces", {
   name: varchar({ length: 255 }).notNull(),
   description: text(),
-  ...commonTable,
+  ...cloneDeep(commonTable),
 });
+
+export const inviteCodeType = pgEnum("invition_code_table_type", ["collection", "workspace"]);
+export const InviteCodeTable = pgTable("invition_code_table", {
+  type: inviteCodeType().notNull(),
+  relatedId: varchar("related_id", { length: 255 }).notNull(),
+  expiresAt: timestamp("expires_At", { withTimezone: true, mode: "string" }).notNull(),
+  ...cloneDeep(commonTable),
+});
+
 export const enumDrawingType = pgEnum("enum_drawing_type", ["excalidraw", "mermaid"]);
 
 export const CollectionTable = pgTable("collections", {
@@ -57,6 +66,8 @@ export const DrawingTable = pgTable(
   ]
 );
 
+export const enumCollectionSharesPermission = pgEnum("enum_collection_shares_permission", ["view", "edit"]);
+export const enumCollectionSharesStatus = pgEnum("enum_collection_shares_status", ["pending", "accepted"]);
 export const CollectionShareTable = pgTable(
   "collection_shares",
   {
