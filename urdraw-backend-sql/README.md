@@ -10,4 +10,6 @@ Ví dụ: 001-start.sql
 
 > Luôn luôn tạo file sql mới, chứ không được phép sửa trên chính file cũ. Vì đang theo nguyên tắc là history log. Nếu bạn muốn sửa cột như: sửa tên cột, thay đổi kiểu dữ liệu thì tạo file sql mới và viết câu lệnh after table để thay đổi. Tương tự cho xóa cột, xóa table, thêm mối quan hệ, thêm khóa ngoại...v..v...
 
-> Hiện tại phiên bản workflow 1.1 này chỉ pháp dụng cho 1 commit (nhiều file hoặc 1 file). Nếu bạn push nhiều hơn 1 commit trở lên thì sẽ không đúng
+> Phiên bản workflow 1.1 này chỉ pháp dụng cho 1 commit (nhiều file hoặc 1 file). Nếu bạn push nhiều hơn 1 commit trở lên thì sẽ không đúng
+
+> Phiên bản workflow 1.2 đã fix được lỗi của workflow 1.1
