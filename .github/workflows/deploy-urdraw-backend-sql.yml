@@ -36,9 +36,11 @@ jobs:
       - name: Run SQL files on PostgreSQL
         run: |
           IFS=$'\n'
-          for file in $(echo ${{ steps.changed_sql_files.outputs.added_sql_files }} | tr -s ' ' '\n'); do
-            echo "Running $file on PostgreSQL..."
-            psql "${{ secrets.DATABASE_URL }}" -a -f $file
+          for file in ${{ steps.changed_sql_files.outputs.added_sql_files }}; do
+            if [[ -n "$file" ]]; then  # Kiểm tra xem file có tồn tại không
+              echo "Running $file on PostgreSQL..."
+              psql "${{ secrets.DATABASE_URL }}" -a -f $file
+            fi
           done
 
       - name: Send Telegram Notification
