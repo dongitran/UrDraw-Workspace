@@ -15,7 +15,10 @@ jobs:
       - name: Get changed SQL files
         id: changed_sql_files
         run: |
-          git diff --name-status ${{ github.event.before }} ${{ github.sha }} | grep '\.sql$' > changes.txt || true
+          PREV_COMMIT=$(git rev-parse HEAD^)
+          CURR_COMMIT=$(git rev-parse HEAD)
+
+          git diff --name-status $PREV_COMMIT $CURR_COMMIT | grep '\.sql$' > changes.txt || true
 
           grep '^A' changes.txt | cut -f2- > added.txt || true
           grep '^M' changes.txt | cut -f2- > modified.txt || true
