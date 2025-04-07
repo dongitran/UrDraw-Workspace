@@ -35,8 +35,8 @@ jobs:
 
       - name: Run SQL files on PostgreSQL
         run: |
-          for file in ${{ steps.changed_sql_files.outputs.added_sql_files }}
-          do
+          IFS=$'\n'
+          for file in $(echo "${{ steps.changed_sql_files.outputs.added_sql_files }}" | tr -s ' ' '\n'); do
             echo "Running $file on PostgreSQL..."
             psql "${{ secrets.DATABASE_URL }}" -a -f $file
           done
