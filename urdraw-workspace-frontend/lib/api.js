@@ -1,6 +1,5 @@
 import axios from "axios";
 import { getToken, updateToken, logout } from "./keycloak";
-import { generateRandomThumbnail } from "./thumbnailGenerator";
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -307,6 +306,24 @@ export const getAllCollectionsAndDrawings = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching all collections and drawings:", error);
+    throw error;
+  }
+};
+
+export const getDrawingContentFromBackend = async (drawingId) => {
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const token = getToken();
+
+    const response = await axios.get(`${backendUrl}/drawing/${drawingId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching drawing content from backend:", error);
     throw error;
   }
 };

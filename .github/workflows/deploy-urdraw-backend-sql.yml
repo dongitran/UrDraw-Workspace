@@ -1,0 +1,60 @@
+name: Deploy Workspace Backend SQL
+
+on:
+  push:
+    branches:
+      - deploy-workspace-backend-sql
+
+jobs:
+  deploy-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Get changed SQL files
+        id: changed_sql_files
+        run: |
+          git diff --name-status ${{ github.event.before }} ${{ github.sha }} | grep '\.sql$' > changes.txt || true
+
+          grep '^A' changes.txt | cut -f2- > added.txt || true
+
+          echo "added_sql_files<<EOF" >> $GITHUB_OUTPUT
+          cat added.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Run SQL files on PostgreSQL
+        run: |
+          IFS=$'\n'
+          for file in $(echo "${{ steps.changed_sql_files.outputs.added_sql_files }}" | tr -s ' ' '\n'); do
+            echo "Running $file on PostgreSQL..."
+            psql "${{ secrets.DATABASE_URL }}" -a -f $file
+          done
+
+      - name: Send Telegram Notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_GROUP_DEPLOYMENTS }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            *🚀 UrDraw - Workspace Backend SQL * 🏃‍♂️${{ github.run_number }}
+
+            *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
+            *📝 Commit message:* ${{ github.event.head_commit.message }}
+            *📁 New SQL files:*
+            ```
+            ${{ steps.changed_sql_files.outputs.added_sql_files }}
+            ```
+            *📦 Repository:* ${{ github.repository }}
+            *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+
+            DONE 🚁️️️️️️🚁️️️️️️🚁️️️️️️🚁️️️️️️
