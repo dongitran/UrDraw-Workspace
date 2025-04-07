@@ -8,5 +8,12 @@ const db = drizzle(process.env.DATABASE_URL!, {
     ...FullRelation,
   },
 });
-
+type WriteSystemInsert = typeof FullSchema.SystemLogTable.$inferInsert;
+export const WriteSystemLog = (values: WriteSystemInsert) => {
+  db.insert(FullSchema.SystemLogTable)
+    .values(values)
+    .then(() => {
+      console.log("Write system log done");
+    });
+};
 export default db;

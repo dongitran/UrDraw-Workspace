@@ -1,11 +1,12 @@
-import db from "db/db";
+import db, { WriteSystemLog } from "db/db";
 import { Hono } from "hono";
 import VerifyToken from "middlewares/VerifyToken";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { CollectionTable } from "db/schema";
+import { CollectionTable, SystemLogTable } from "db/schema";
 import dayjs from "dayjs";
 import { eq } from "drizzle-orm";
+import { ulid } from "ulid";
 
 const CollectionRoute = new Hono();
 CollectionRoute.use(VerifyToken());
@@ -194,7 +195,7 @@ CollectionRoute.post(
     return ctx.json(collections);
   }
 );
-CollectionRoute.put(
+CollectionRoute.patch(
   "/:id",
   zValidator(
     "json",
@@ -216,7 +217,22 @@ CollectionRoute.put(
       .where(eq(CollectionTable.id, collection.id))
       .returning()
       .then((res) => res[0]);
-    return ctx.json(newCollection);
+    WriteSystemLog({
+      createdAt: dayjs().toISOString(),
+      description: "Chỉnh sửa thông tin",
+      id: ulid(),
+      relatedId: id,
+      type: "collection",
+      userId: user.id,
+      createdBy: user.id,
+      oldData: collection,
+      newData: newCollection,
+      method: ctx.req.method,
+      params: {
+        path: ctx.req.path,
+      },
+    });
+    return ctx.json({ message: "ok" });
   }
 );
 CollectionRoute.delete("/:id", async (ctx) => {
@@ -227,14 +243,30 @@ CollectionRoute.delete("/:id", async (ctx) => {
   });
   if (!collection) return ctx.json({ message: "Collection not found" }, 404);
 
-  await db
+  const newData = await db
     .update(CollectionTable)
     .set({
       deletedAt: dayjs().toISOString(),
       updatedAt: dayjs().toISOString(),
     })
-    .where(eq(CollectionTable.id, collection.id));
-
+    .where(eq(CollectionTable.id, collection.id))
+    .returning()
+    .then((res) => res[0]);
+  WriteSystemLog({
+    createdAt: dayjs().toISOString(),
+    description: "Đã xóa collection",
+    id: ulid(),
+    relatedId: id,
+    type: "collection",
+    userId: user.id,
+    createdBy: user.id,
+    oldData: collection,
+    newData,
+    method: ctx.req.method,
+    params: {
+      path: ctx.req.path,
+    },
+  });
   return ctx.json({ message: "Collection deleted successfully" });
 });
 export default CollectionRoute;

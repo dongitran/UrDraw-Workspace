@@ -12,7 +12,15 @@ const commonTable = {
   deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
   deletedBy: varchar("deleted_by", { length: 255 }),
 };
-
+export const SystemLogTable = pgTable("system_logs", {
+  type: varchar({ length: 255 }).notNull(),
+  relatedId: varchar("related_id").notNull(),
+  description: text().notNull(),
+  oldData: jsonb("old_data").notNull(),
+  newData: jsonb("new_data").notNull(),
+  method: varchar({ length: 10 }).notNull(),
+  ...commonTable,
+});
 export const WorkspaceTable = pgTable("workspaces", {
   name: varchar({ length: 255 }).notNull(),
   description: text(),

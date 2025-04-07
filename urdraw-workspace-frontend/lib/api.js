@@ -196,15 +196,13 @@ export const WorkspaceApi = () => {
   };
   return { post, get, detail, patch, delete: _delete };
 };
-
-export const updateCollection = async (collectionId, collectionData) => {
-  try {
-    const response = await apiClient.put(`/collections/${collectionId}`, collectionData);
+export const CollectionApi = () => {
+  const path = "/collections";
+  const patch = async (collectionId, collectionData) => {
+    const response = await apiClient.patch(`${path}/${collectionId}`, collectionData);
     return response.data;
-  } catch (error) {
-    console.error("Error updating collection:", error);
-    throw error;
-  }
+  };
+  return { patch };
 };
 
 export const deleteCollection = async (collectionId) => {

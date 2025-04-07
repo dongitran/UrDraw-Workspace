@@ -64,10 +64,10 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
       setOpenDrawModal(null);
       setName("");
       if (refetch) refetch();
-      toast.success("Edit collection name successfully");
+      toast.success("Edit drawing name successfully");
     } catch (error) {
       console.log("error :>> ", error);
-      toast.error("Edit collection name failed");
+      toast.error("Edit drawing name failed");
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ const DrawingModal = ({ collectionId, drawing = {}, refetch, openDrawModal, setO
         <Dialog open={!!openDrawModal}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Edit collection name</DialogTitle>
+              <DialogTitle>Edit drawing name</DialogTitle>
               <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">

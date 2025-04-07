@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CollectionShareApi, createCollection, deleteCollection, updateCollection } from "@/lib/api";
+import { CollectionApi, CollectionShareApi, createCollection, deleteCollection, updateCollection } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Copy, CopyCheck, LoaderCircle } from "lucide-react";
@@ -49,7 +49,8 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
       return;
     }
     try {
-      await updateCollection(collection.id, {
+      setLoading(true);
+      await CollectionApi().patch(collection.id, {
         name,
       });
       setOpenCollectionModal(null);
@@ -59,6 +60,8 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
     } catch (error) {
       console.log("error :>> ", error);
       toast.error("Edit collection name failed");
+    } finally {
+      setLoading(false);
     }
   };
   const onDelete = async () => {
@@ -279,10 +282,13 @@ const CollectionModal = ({ collection = {}, workspace = {}, refetch, openCollect
                   if (setOpenCollectionModal) setOpenCollectionModal();
                 }}
                 variant="close"
+                disabled={loading}
               >
+                {loading && <LoaderCircle className="animate-spin" />}
                 Close
               </Button>
-              <Button onClick={onEdit} variant="success">
+              <Button onClick={onEdit} variant="success" disabled={loading}>
+                {loading && <LoaderCircle className="animate-spin" />}
                 Save
               </Button>
             </DialogFooter>
