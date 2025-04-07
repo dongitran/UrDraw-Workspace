@@ -14,6 +14,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
       - name: Get changed SQL files
         id: changed_sql_files
         run: |
@@ -23,20 +28,17 @@ jobs:
           git diff --name-status $PREV_COMMIT $CURR_COMMIT | grep '\.sql$' > changes.txt || true
 
           grep '^A' changes.txt | cut -f2- > added.txt || true
-          grep '^M' changes.txt | cut -f2- > modified.txt || true
-          grep '^D' changes.txt | cut -f2- > deleted.txt || true
 
           echo "added_sql_files<<EOF" >> $GITHUB_OUTPUT
           cat added.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          echo "modified_sql_files<<EOF" >> $GITHUB_OUTPUT
-          cat modified.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "deleted_sql_files<<EOF" >> $GITHUB_OUTPUT
-          cat deleted.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+      - name: Run SQL files on PostgreSQL
+        run: |
+          for file in ${{ steps.changed_sql_files.outputs.added_sql_files }}
+          do
+            echo "Running $file on PostgreSQL..."
+          done
 
       - name: Send Telegram Notification
         uses: appleboy/telegram-action@master
@@ -54,15 +56,7 @@ jobs:
             ```
             ${{ steps.changed_sql_files.outputs.added_sql_files }}
             ```
-            *📁 Update SQL files:*
-            ```
-            ${{ steps.changed_sql_files.outputs.modified_sql_files }}
-            ```
-            *📁 Delete SQL files:*
-            ```
-            ${{ steps.changed_sql_files.outputs.deleted_sql_files }}
-            ```
             *📦 Repository:* ${{ github.repository }}
             *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
 
-            Started 🚁️️️️️️🚁️️️️️️🚁️️️️️️🚁️️️️️️
+            DONE 🚁️️️️️️🚁️️️️️️🚁️️️️️️🚁️️️️️️
