@@ -185,6 +185,7 @@ CollectionRoute.get("/", async (ctx) => {
     const logs = await db.query.SystemLogTable.findMany({
       where: (clm, { eq, and }) =>
         and(eq(clm.userId, user.id), eq(clm.type, "collection"), eq(clm.relatedId, collection.id)),
+      orderBy: (clm, { desc }) => desc(clm.id),
     });
     return ctx.json({ collection: { ...collection, totalDrawing: result[0].total }, logs });
   });
@@ -216,6 +217,7 @@ CollectionRoute.post(
     return ctx.json(collections);
   }
 );
+
 CollectionRoute.patch(
   "/:id",
   zValidator(

@@ -51,7 +51,7 @@ const CollectionLog = () => {
         return (
           <div className="border p-3 rounded-sm" key={item.id}>
             <div className="mb-3">{renderMethod(item.method)}</div>
-            <div className="mb-3 text-sm font-medium">{item.description}</div>
+            <div className="mb-3 text-base font-medium">{item.description}</div>
             <div className="text-muted-foreground text-xs">
               <span>{dayjs(item.createdAt).format("HH:mm DD/MM/YYYY")}</span>
               <span> - </span>

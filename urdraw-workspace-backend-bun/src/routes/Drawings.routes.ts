@@ -1,11 +1,12 @@
 import { zValidator } from "@hono/zod-validator";
 import dayjs from "dayjs";
-import db from "db/db";
+import db, { WriteSystemLog } from "db/db";
 import { DrawingTable } from "db/schema";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { isEmpty } from "lodash";
 import VerifyToken from "middlewares/VerifyToken";
+import { ulid } from "ulid";
 import { z } from "zod";
 
 const DrawingRoutes = new Hono();
@@ -22,17 +23,10 @@ DrawingRoutes.get("/:id", async (ctx) => {
   if (!isOwner) {
     const share = await db.query.CollectionShareTable.findFirst({
       where: (clm, { eq, and }) =>
-        and(
-          eq(clm.collectionId, drawing.collectionId!),
-          eq(clm.sharedWithId, user.id),
-          eq(clm.status, "accepted")
-        ),
+        and(eq(clm.collectionId, drawing.collectionId!), eq(clm.sharedWithId, user.id), eq(clm.status, "accepted")),
     });
     if (!share) {
-      return ctx.json(
-        { message: "You don't have permission to access this drawing" },
-        403
-      );
+      return ctx.json({ message: "You don't have permission to access this drawing" }, 403);
     }
   }
   return ctx.json(drawing);
@@ -52,11 +46,9 @@ DrawingRoutes.post(
   ),
   async (ctx) => {
     const user = ctx.get("user");
-    const { collectionId, content, name, thumbnailUrl, type } =
-      ctx.req.valid("json");
+    const { collectionId, content, name, thumbnailUrl, type } = ctx.req.valid("json");
     const collection = await db.query.CollectionTable.findFirst({
-      where: (clm, { and, eq }) =>
-        and(eq(clm.userId, user.id), eq(clm.id, collectionId)),
+      where: (clm, { and, eq }) => and(eq(clm.userId, user.id), eq(clm.id, collectionId)),
     });
     if (!collection) return ctx.json({ message: "Collection not found" }, 404);
     const draw = await db
@@ -76,6 +68,18 @@ DrawingRoutes.post(
       })
       .returning()
       .then((res) => res[0]);
+    WriteSystemLog({
+      createdAt: dayjs().toISOString(),
+      description: "Tạo mới drawing",
+      id: ulid(),
+      method: ctx.req.method,
+      newData: draw,
+      oldData: draw,
+      relatedId: collectionId,
+      type: "collection",
+      userId: user.id,
+      createdBy: user.id,
+    });
     return ctx.json(draw);
   }
 );
@@ -95,8 +99,7 @@ DrawingRoutes.put(
   async (ctx) => {
     const user = ctx.get("user");
     const id = ctx.req.param("id");
-    const { name, collectionId, content, thumbnailUrl, type } =
-      ctx.req.valid("json");
+    const { name, collectionId, content, thumbnailUrl, type } = ctx.req.valid("json");
     const drawing = await db.query.DrawingTable.findFirst({
       where: (clm, { eq }) => eq(clm.id, id),
       with: { collection: true },
@@ -119,23 +122,15 @@ DrawingRoutes.put(
           );
         },
       });
-      if (!share)
-        return ctx.json(
-          { message: "You don't have permission to edit this drawing" },
-          403
-        );
+      if (!share) return ctx.json({ message: "You don't have permission to edit this drawing" }, 403);
     }
 
     if (collectionId && collectionId !== drawing.collectionId) {
       if (!isOwner) {
-        return ctx.json(
-          { message: "Only the owner can move drawings between collections" },
-          403
-        );
+        return ctx.json({ message: "Only the owner can move drawings between collections" }, 403);
       }
       const targetCollection = await db.query.CollectionTable.findFirst({
-        where: (clm, { and, eq }) =>
-          and(eq(clm.id, collectionId), eq(clm.userId, user.id)),
+        where: (clm, { and, eq }) => and(eq(clm.id, collectionId), eq(clm.userId, user.id)),
       });
       if (targetCollection) {
         return ctx.json({ message: "Target collection not found" }, 404);

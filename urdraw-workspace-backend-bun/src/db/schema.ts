@@ -6,7 +6,7 @@ const commonTable = {
   userId: varchar("user_id", { length: 255 }).notNull(),
   params: jsonb(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull(),
-  createdBy: varchar("created_by", { length: 255 }),
+  createdBy: varchar("created_by", { length: 255 }).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" }),
   updatedBy: varchar("updated_by", { length: 255 }),
   deletedAt: timestamp("deleted_at", { withTimezone: true, mode: "string" }),
