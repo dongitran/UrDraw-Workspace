@@ -9,19 +9,58 @@ jobs:
   send-notification-started:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Telegram Notification
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_GROUP_DEPLOYMENTS }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          format: markdown
-          disable_web_page_preview: true
-          message: |
-            *🚀 UrDraw - Workspace Backend SQL * 🏃‍♂️${{ github.run_number }}
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-            *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
-            *📝 Commit message:* ${{ github.event.head_commit.message }}
-            *📦 Repository:* ${{ github.repository }}
-            *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+    - name: Get changed SQL files
+      id: changed_sql_files
+      run: |
+        PREV_COMMIT=$(git rev-parse HEAD^)
+        CURR_COMMIT=$(git rev-parse HEAD)
 
-            Started 🚁️️️️️️🚁️️️️️️🚁️️️️️️🚁️️️️️️
+        git diff --name-status $PREV_COMMIT $CURR_COMMIT | grep '\.sql$' > changes.txt || true
+
+        grep '^A' changes.txt | cut -f2- > added.txt || true
+        grep '^M' changes.txt | cut -f2- > modified.txt || true
+        grep '^D' changes.txt | cut -f2- > deleted.txt || true
+
+        echo "added_sql_files<<EOF" >> $GITHUB_OUTPUT
+        cat added.txt >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+        echo "modified_sql_files<<EOF" >> $GITHUB_OUTPUT
+        cat modified.txt >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+        echo "deleted_sql_files<<EOF" >> $GITHUB_OUTPUT
+        cat deleted.txt >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Send Telegram Notification
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_GROUP_DEPLOYMENTS }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        format: markdown
+        disable_web_page_preview: true
+        message: |
+          *🚀 UrDraw - Workspace Backend SQL * 🏃‍♂️${{ github.run_number }}
+
+          *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
+          *📝 Commit message:* ${{ github.event.head_commit.message }}
+          *📁 New SQL files:*
+          ```
+          ${{ steps.changed_sql_files.outputs.added_sql_files }}
+          ```
+          *📁 Update SQL files:*
+          ```
+          ${{ steps.changed_sql_files.outputs.modified_sql_files }}
+          ```
+          *📁 Delete SQL files:*
+          ```
+          ${{ steps.changed_sql_files.outputs.deleted_sql_files }}
+          ```
+          *📦 Repository:* ${{ github.repository }}
+          *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+
+          Started 🚁️️️️️️🚁️️️️️️🚁️️️️️️🚁️️️️️️
