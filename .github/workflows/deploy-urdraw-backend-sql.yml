@@ -4,3 +4,24 @@ on:
   push:
     branches:
       - deploy-workspace-backend-sql
+
+jobs:
+  send-notification-started:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram Notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_GROUP_DEPLOYMENTS }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          format: markdown
+          disable_web_page_preview: true
+          message: |
+            *🚀 UrDraw - Workspace Backend SQL * 🏃‍♂️${{ github.run_number }}
+
+            *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
+            *📝 Commit message:* ${{ github.event.head_commit.message }}
+            *📦 Repository:* ${{ github.repository }}
+            *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+
+            Started 🚁️️️️️️🚁️️️️️️🚁️️️️️️🚁️️️️️️
