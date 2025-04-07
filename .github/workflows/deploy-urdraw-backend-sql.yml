@@ -50,25 +50,18 @@ jobs:
 
             *👤 Committer:* [${{ github.actor }}](https://github.com/${{ github.actor }})
             *📝 Commit message:* ${{ github.event.head_commit.message }}
-            ${{ if steps.changed_sql_files.outputs.added_sql_files}}
             *📁 New SQL files:*
             ```
             ${{ steps.changed_sql_files.outputs.added_sql_files }}
             ```
-            ${{ end }}
-            ${{ if steps.changed_sql_files.outputs.modified_sql_files}}
             *📁 Update SQL files:*
             ```
             ${{ steps.changed_sql_files.outputs.modified_sql_files }}
             ```
-            ${{ end }}
-            ${{ if steps.changed_sql_files.outputs.deleted_sql_files}}
             *📁 Delete SQL files:*
             ```
             ${{ steps.changed_sql_files.outputs.deleted_sql_files }}
             ```
-            ${{ end }}
-
             *📦 Repository:* ${{ github.repository }}
             *🔍 See changes:* [View changes](https://github.com/${{ github.repository }}/commit/${{github.sha}})
 
