@@ -1,10 +1,14 @@
+# Mục đích của Folder
+
+Bạn chỉ cần tạo file sql và đặt vào thư mục này thì nó sẽ tự động thực thi file sql của bạn mà không cần phải thực thi 1 cách thủ công
+
 # Quy tắc đặt tên file SQL
 
 Ví dụ: 001-start.sql
+
 - 001: là tiền tố, theo số thứ tự tăng dần
 - start: tên file (mô tả ngắn gọn mục đích của file, viết theo dạng CamelCase)
 - sql: là loại file
-
 
 # Quy tắc khi viết file SQL
 
