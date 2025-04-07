@@ -6,7 +6,7 @@ on:
       - deploy-workspace-backend-sql
 
 jobs:
-  send-notification-started:
+  deploy-sql:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
