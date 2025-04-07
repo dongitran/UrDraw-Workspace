@@ -3,9 +3,9 @@ import { Hono } from "hono";
 import VerifyToken from "middlewares/VerifyToken";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { CollectionTable, SystemLogTable } from "db/schema";
+import { CollectionTable, DrawingTable, SystemLogTable } from "db/schema";
 import dayjs from "dayjs";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { ulid } from "ulid";
 
 const CollectionRoute = new Hono();
@@ -166,6 +166,27 @@ CollectionRoute.get("/", async (ctx) => {
       permission: sharePermission,
     };
     return ctx.json(response);
+  })
+  .get("/:id/logs", async (ctx) => {
+    const user = ctx.get("user");
+    const id = ctx.req.param("id");
+    const collection = await db.query.CollectionTable.findFirst({
+      where: (clm, { eq, and, isNull }) => and(isNull(clm.deletedAt), eq(clm.userId, user.id), eq(clm.id, id)),
+    });
+
+    if (!collection) {
+      return ctx.json({ message: "Collection not found" }, 404);
+    }
+    const result = await db
+      .select({ total: count() })
+      .from(DrawingTable)
+      .where(eq(DrawingTable.collectionId, collection.id));
+
+    const logs = await db.query.SystemLogTable.findMany({
+      where: (clm, { eq, and }) =>
+        and(eq(clm.userId, user.id), eq(clm.type, "collection"), eq(clm.relatedId, collection.id)),
+    });
+    return ctx.json({ collection: { ...collection, totalDrawing: result[0].total }, logs });
   });
 
 CollectionRoute.post(

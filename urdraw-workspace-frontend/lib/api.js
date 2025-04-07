@@ -202,7 +202,11 @@ export const CollectionApi = () => {
     const response = await apiClient.patch(`${path}/${collectionId}`, collectionData);
     return response.data;
   };
-  return { patch };
+  const getLogs = async (id) => {
+    const res = await apiClient.get(`${path}/${id}/logs`);
+    return res.data;
+  };
+  return { patch, getLogs };
 };
 
 export const deleteCollection = async (collectionId) => {
