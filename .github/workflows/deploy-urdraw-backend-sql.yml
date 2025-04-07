@@ -38,7 +38,7 @@ jobs:
           for file in ${{ steps.changed_sql_files.outputs.added_sql_files }}
           do
             echo "Running $file on PostgreSQL..."
-            psql "${{ secrets.DATABASE_URL }}" -f $file
+            psql "${{ secrets.DATABASE_URL }}" -a -f $file
           done
 
       - name: Send Telegram Notification
