@@ -8,6 +8,8 @@ import { isEmpty } from "lodash";
 import VerifyToken from "middlewares/VerifyToken";
 import { z } from "zod";
 
+const DEFAULT_THUMBNAIL = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%0A%20%20%20%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23fff2%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2256%22%20cy%3D%2249%22%20%0A%20%20%20%20%20%20r%3D%2222%22%20fill%3D%22%2314b8%22%20opacity%3D%220.6%22%2F%3E%0A%20%20%3C%2Fsvg%3E";
+
 const DrawingRoutes = new Hono();
 DrawingRoutes.use(VerifyToken());
 
@@ -45,15 +47,49 @@ DrawingRoutes.post(
     z.object({
       name: z.string(),
       collectionId: z.string().uuid(),
-      thumbnailUrl: z.string(),
+      thumbnailUrl: z.string().optional().nullable(),
       content: z.string(),
       type: z.enum(["excalidraw", "mermaid"]).default("excalidraw"),
+      id: z.string().optional(),
     })
   ),
   async (ctx) => {
     const user = ctx.get("user");
-    const { collectionId, content, name, thumbnailUrl, type } =
+    const { collectionId, content, name, thumbnailUrl, type, id } =
       ctx.req.valid("json");
+    const now = dayjs().toISOString();
+    
+    const finalThumbnailUrl = thumbnailUrl === null || thumbnailUrl === undefined 
+      ? DEFAULT_THUMBNAIL 
+      : thumbnailUrl;
+    
+    if (id) {
+      const existingDrawing = await db.query.DrawingTable.findFirst({
+        where: (clm, { eq, and }) => and(eq(clm.id, id), eq(clm.userId, user.id)),
+      });
+      
+      if (existingDrawing) {
+        const bodyUpdate = {
+          name,
+          collectionId,
+          updatedAt: now,
+          lastModified: now,
+          thumbnailUrl: finalThumbnailUrl,
+          content,
+          type,
+        };
+        
+        const updatedDrawing = await db
+          .update(DrawingTable)
+          .set(bodyUpdate)
+          .where(eq(DrawingTable.id, id))
+          .returning()
+          .then((res) => res[0]);
+          
+        return ctx.json(updatedDrawing);
+      }
+    }
+    
     const collection = await db.query.CollectionTable.findFirst({
       where: (clm, { and, eq }) =>
         and(eq(clm.userId, user.id), eq(clm.id, collectionId)),
@@ -62,16 +98,16 @@ DrawingRoutes.post(
     const draw = await db
       .insert(DrawingTable)
       .values({
-        createdAt: dayjs().toISOString(),
-        id: Bun.randomUUIDv7(),
+        createdAt: now,
+        id: id || Bun.randomUUIDv7(),
         name,
         workspaceId: collection.workspaceId,
-        updatedAt: dayjs().toISOString(),
+        updatedAt: now,
         userId: user.id,
         collectionId: collection.id,
         content,
-        thumbnailUrl,
-        lastModified: dayjs().toISOString(),
+        thumbnailUrl: finalThumbnailUrl,
+        lastModified: now,
         type: type || "excalidraw",
       })
       .returning()

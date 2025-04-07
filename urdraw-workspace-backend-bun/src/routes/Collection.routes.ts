@@ -173,27 +173,53 @@ CollectionRoute.post(
     "json",
     z.object({
       name: z.string().min(3, "Ít nhất phải 3 ký tự"),
-      workspaceId: z.string().ulid(),
+      workspaceId: z.string().ulid().optional(),
+      id: z.string().optional(),
     })
   ),
   async (ctx) => {
     const user = ctx.get("user");
-    const { name, workspaceId } = ctx.req.valid("json");
+    const { name, workspaceId, id } = ctx.req.valid("json");
+    const now = dayjs().toISOString();
+    
+    if (id) {
+      const existingCollection = await db.query.CollectionTable.findFirst({
+        where: (clm, { eq, and, isNull }) => 
+          and(eq(clm.id, id), eq(clm.userId, user.id), isNull(clm.deletedAt)),
+      });
+      
+      if (existingCollection) {
+        const updatedCollection = await db
+          .update(CollectionTable)
+          .set({ 
+            name, 
+            updatedAt: now 
+          })
+          .where(eq(CollectionTable.id, id))
+          .returning()
+          .then((res) => res[0]);
+          
+        return ctx.json(updatedCollection);
+      }
+    }
+    
     const collections = await db
       .insert(CollectionTable)
       .values({
         userId: user.id,
         workspaceId,
         name,
-        id: Bun.randomUUIDv7(),
-        createdAt: dayjs().toISOString(),
-        updatedAt: dayjs().toISOString(),
+        id: id || Bun.randomUUIDv7(),
+        createdAt: now,
+        updatedAt: now,
       })
       .returning()
       .then((res) => res[0]);
+      
     return ctx.json(collections);
   }
 );
+
 CollectionRoute.put(
   "/:id",
   zValidator(
@@ -219,6 +245,7 @@ CollectionRoute.put(
     return ctx.json(newCollection);
   }
 );
+
 CollectionRoute.delete("/:id", async (ctx) => {
   const id = ctx.req.param("id");
   const user = ctx.get("user");
@@ -237,4 +264,5 @@ CollectionRoute.delete("/:id", async (ctx) => {
 
   return ctx.json({ message: "Collection deleted successfully" });
 });
+
 export default CollectionRoute;
