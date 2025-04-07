@@ -14,6 +14,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check for modification of existing SQL files
+        run: |
+          modified_files=$(git diff --name-only $PREV_COMMIT $CURR_COMMIT | grep '\.sql$' | grep -v '^A')
+          if [ -n "$modified_files" ]; then
+            echo "Error: Modifying existing SQL files is not allowed. Please only add new files."
+            exit 1
+          fi
+
       - name: Install PostgreSQL Client
         run: |
           sudo apt-get update
